@@ -1,5 +1,11 @@
 # User Center
 
+[TOC]
+
+
+
+---
+
 - 鱼皮项目
 
   1. 用户中心：学完框架新手入门、完整项目开发流程、管理系统CRUD
@@ -123,8 +129,10 @@
 
   服务器：Linux单机部署 + Nginx web服务器
 
-  平台：Docker容器 + 容器托管平台
+  容器平台：Docker容器 + 容器托管平台
 
+  绑定域名
+  
   
 
 
@@ -218,22 +226,37 @@
       updateTime   timestamp default current_timestamp on update current_timestamp comment '更新时间',
       isDelete     tinyint   default 0 comment '逻辑删除标志',
       -- 补充
-      userRole     int       default 0 comment '用户角色 0是普通用户 1是管理员'
+      userRole     int       default 0 comment '用户角色 0是普通用户 1是管理员',
+      planetCode   varchar(512) null comment '星球编号'
   ) comment '用户';
   
   insert into user (username, useraccount, avatarurl, gender, userpassword, phone, email, userstatus,
                     createtime, updatetime, isdelete,
-                    userrole)
+                    userrole, planetCode)
   values ('oswin', 'oswin501',
-          'https://miro.medium.com/v2/resize:fit:640/format:webp/1*4j2A9niz0eq-mRaCPUffpg.png', 1, 'oswin123456',
+          'https://miro.medium.com/v2/resize:fit:640/format:webp/1*4j2A9niz0eq-mRaCPUffpg.png', 1,
+          'c9d21e89dc04f9f2b446b4fbdafdf4b8',
           '15534340089', 'oswin501@gmail.com', 0,
           current_timestamp, current_timestamp, 0,
-          1),
+          1, 'nn00000001'),
          ('yupi', 'yupi501',
-          'https://pic6.sucaisucai.com/01/88/01388996_2.jpg', 1, 'yupi123456',
+          'https://miro.medium.com/v2/resize:fit:640/format:webp/0*1Og_hmJWdlMiDWuB.png', 1,
+          'c9d21e89dc04f9f2b446b4fbdafdf4b8',
           '15534340089', 'yupi501@gmail.com', 0,
           current_timestamp, current_timestamp, 0,
-          0);
+          0, 'nn00000002'),
+         ('yupi2', 'yupi502',
+          'https://miro.medium.com/v2/resize:fit:640/format:webp/0*1Og_hmJWdlMiDWuB.png', 1,
+          'c9d21e89dc04f9f2b446b4fbdafdf4b8',
+          '15534340089', 'yupi501@gmail.com', 0,
+          current_timestamp, current_timestamp, 1,
+          0, 'nn00000003'),
+         ('yupi3', 'yupi503',
+          'https://miro.medium.com/v2/resize:fit:640/format:webp/0*1Og_hmJWdlMiDWuB.png', 1,
+          'c9d21e89dc04f9f2b446b4fbdafdf4b8',
+          '15534340089', 'yupi501@gmail.com', 1,
+          current_timestamp, current_timestamp, 0,
+          0, 'nn00000004');
   
   ```
   
@@ -268,7 +291,6 @@
   
   # request
   {
-    "userAccount": "yupi501",
     "userPassword": "12345678"
   }
   
@@ -315,7 +337,7 @@
   }
   
   ```
-
+  
 - 用户管理
 
   ```bash
@@ -501,7 +523,39 @@
 
 ### 路由配置
 
+- config/routes.ts
 
+  ```typescript
+  export default [
+    {
+      path: '/user',
+      layout: false,
+      routes: [
+        {name: '登录', path: '/user/login', component: './User/Login'},
+        {name: '注册', path: '/user/register', component: './User/Register'},
+      ],
+    },
+    {path: '/welcome', name: '欢迎', icon: 'smile', component: './Welcome'},
+    {
+      path: '/admin',
+      name: '管理页',
+      icon: 'crown',
+      access: 'canAdmin', // 鉴权
+      // component: './Admin', // 父子页面
+      routes: [
+        {path: '/admin', redirect: '/admin/user-manager'},
+        {path: '/admin/user-manager', name: '用户管理页', component: './Admin/UserManage'},
+        // {path: '/admin/sub-page', name: '二级管理页', component: './Admin'},
+      ],
+    },
+    {name: '查询表格', icon: 'table', path: '/list', component: './TableList'},
+    {path: '/', redirect: '/welcome'},
+    {path: '*', layout: false, component: './404'},
+  ];
+  
+  ```
+  
+  
 
 
 
@@ -1035,14 +1089,675 @@
 
 ## 前端页面：用户模块
 
+### 核心入口
+
+- src/app.tsx 
+
+  初始化数据：获取当前用户
+
+  ```tsx
+  getInitialState() {
+      fetchUserInfo() {
+          const msg = await queryCurrentUser()
+          // 获取不到 则重定向登陆页面 history.push(loginPath);
+      }
+  }
+  
+  
+  onPageChange() {
+      // 如果是无需登录页面，放行
+      // 没有登陆 则重定向登陆页面 history.push(loginPath);
+  }
+  ```
+
+- src/access.ts
+
+  控制用户访问权限 (access语法弹)
+
+  ```typescript
+  /**
+   * @see https://umijs.org/docs/max/access#access
+   * */
+  export default function access(initialState: { currentUser?: API.CurrentUser } | undefined) {
+    const { currentUser } = initialState ?? {};
+    return {
+      canAdmin: currentUser && currentUser.userRole === 1,  // admin
+    };
+  }
+  
+  ```
+
+  
+
+
+
 ### 页面：用户登陆
 
 - src/pages/User/Login/index.tsx
 
+  用户登陆、获取当前用户 (前端获取用户登录态)
+  
   ```tsx
+  import {Footer} from '@/components';
+  import {login} from '@/services/ant-design-pro/api';
+  import {LockOutlined, UserOutlined,} from '@ant-design/icons';
+  import {LoginForm, ProFormCheckbox, ProFormText,} from '@ant-design/pro-components';
+  import {Helmet, history, useModel} from '@umijs/max';
+  import {Alert, message, Tabs} from 'antd';
+  import {createStyles} from 'antd-style';
+  import React, {useState} from 'react';
+  import {flushSync} from 'react-dom';
+  import Settings from '../../../../config/defaultSettings';
+  import {PLANET_LINK, SYSTEM_LOGO} from "@/constants";
+  
+  const useStyles = createStyles(({token}) => {
+    return {
+      action: {
+        marginLeft: '8px',
+        color: 'rgba(0, 0, 0, 0.2)',
+        fontSize: '24px',
+        verticalAlign: 'middle',
+        cursor: 'pointer',
+        transition: 'color 0.3s',
+        '&:hover': {
+          color: token.colorPrimaryActive,
+        },
+      },
+      lang: {
+        width: 42,
+        height: 42,
+        lineHeight: '42px',
+        position: 'fixed',
+        right: 16,
+        borderRadius: token.borderRadius,
+        ':hover': {
+          backgroundColor: token.colorBgTextHover,
+        },
+      },
+      container: {
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100vh',
+        overflow: 'auto',
+        backgroundImage:
+          "url('https://mdn.alipayobjects.com/yuyan_qk0oxh/afts/img/V-_oS6r-i7wAAAAAAAAAAAAAFl94AQBr')",
+        backgroundSize: '100% 100%',
+      },
+    };
+  });
+  const LoginMessage: React.FC<{
+    content: string;
+  }> = ({content}) => {
+    return (
+      <Alert
+        style={{
+          marginBottom: 24,
+        }}
+        message={content}
+        type="error"
+        showIcon
+      />
+    );
+  };
+  const Login: React.FC = () => {
+    const [userLoginState, setUserLoginState] = useState<API.LoginResult>({});
+    const [type, setType] = useState<string>('account');
+    const {initialState, setInitialState} = useModel('@@initialState');
+    const {styles} = useStyles();
+    const fetchUserInfo = async () => {
+      const userInfo = await initialState?.fetchUserInfo?.();
+      if (userInfo) {
+        flushSync(() => {
+          setInitialState((s) => ({
+            ...s,
+            currentUser: userInfo,
+          }));
+        });
+      }
+    };
+    const handleSubmit = async (values: API.LoginParams) => {
+      try {
+        // 登录
+        const user = await login({...values, type,});
+        if (user) {
+          const defaultLoginSuccessMessage = '登录成功！';
+          message.success(defaultLoginSuccessMessage);
+          await fetchUserInfo();
+          const urlParams = new URL(window.location.href).searchParams;
+          history.push(urlParams.get('redirect') || '/');
+          return;
+        }
+        // 如果失败去设置用户错误信息
+        console.log(user);
+        setUserLoginState(user);
+      } catch (error) {
+        const defaultLoginFailureMessage = '登录失败，请重试！';
+        console.log(error);
+        message.error(defaultLoginFailureMessage);
+      }
+    };
+    const {status, type: loginType} = userLoginState;
+    return (
+      <div className={styles.container}>
+        <Helmet>
+          <title>
+            {'登录'}- {Settings.title}
+          </title>
+        </Helmet>
+        <div
+          style={{
+            flex: '1',
+            padding: '32px 0',
+          }}
+        >
+          <LoginForm
+            contentStyle={{
+              minWidth: 280,
+              maxWidth: '75vw',
+            }}
+            logo={<img alt="logo" src={SYSTEM_LOGO}/>}
+            title="User Center From OSWIN"
+            subTitle={<a href={PLANET_LINK} target="_blank" rel="noopener noreferrer"> OSWIN: ALWAYS WIN </a>}
+            initialValues={{
+              autoLogin: true,
+            }}
+            onFinish={async (values) => {
+              await handleSubmit(values as API.LoginParams);
+            }}
+          >
+            <Tabs
+              activeKey={type}
+              onChange={setType}
+              centered
+              items={[
+                {
+                  key: 'account',
+                  label: '账户密码登录',
+                }
+              ]}
+            />
+  
+            {status === 'error' && loginType === 'account' && (
+              <LoginMessage content={'错误的账户和密码'}/>
+            )}
+            {type === 'account' && (
+              <>
+                <ProFormText
+                  name="userAccount"
+                  fieldProps={{
+                    size: 'large',
+                    prefix: <UserOutlined/>,
+                  }}
+                  placeholder={'请输入账户 ...'}
+                  rules={[
+                    {
+                      required: true,
+                      message: '账户是必填项！',
+                    },
+                  ]}
+                />
+                <ProFormText.Password
+                  name="userPassword"
+                  fieldProps={{
+                    size: 'large',
+                    prefix: <LockOutlined/>,
+                  }}
+                  placeholder={'请输入密码 ...'}
+                  rules={[
+                    {
+                      required: true,
+                      message: '密码是必填项！',
+                    },
+                  ]}
+                />
+              </>
+            )}
+  
+            <div
+              style={{
+                marginBottom: 24,
+              }}
+            >
+              <ProFormCheckbox noStyle name="autoLogin">
+                自动登录
+              </ProFormCheckbox>
+              <a
+                style={{
+                  float: 'right',
+                }}
+                href={'/user/register'}
+                rel="noreferrer"
+              >
+                用户注册
+              </a>
+            </div>
+          </LoginForm>
+        </div>
+        <Footer/>
+      </div>
+    );
+  };
+  export default Login;
+  
+  ```
+  
+  
+
+
+
+### 页面：用户注册
+
+- src/pages/User/Register/register.test.tsx
+
+  ```tsx
+  import {Footer} from '@/components';
+  import {register} from '@/services/ant-design-pro/api';
+  import {LockOutlined, UserOutlined,} from '@ant-design/icons';
+  import {LoginForm, ProFormCheckbox, ProFormText,} from '@ant-design/pro-components';
+  import {Helmet, history} from '@umijs/max';
+  import {message, Tabs} from 'antd';
+  import {createStyles} from 'antd-style';
+  import React, {useState} from 'react';
+  import Settings from '../../../../config/defaultSettings';
+  import {PLANET_LINK, SYSTEM_LOGO} from "@/constants";
+  
+  const useStyles = createStyles(({token}) => {
+    return {
+      action: {
+        marginLeft: '8px',
+        color: 'rgba(0, 0, 0, 0.2)',
+        fontSize: '24px',
+        verticalAlign: 'middle',
+        cursor: 'pointer',
+        transition: 'color 0.3s',
+        '&:hover': {
+          color: token.colorPrimaryActive,
+        },
+      },
+      lang: {
+        width: 42,
+        height: 42,
+        lineHeight: '42px',
+        position: 'fixed',
+        right: 16,
+        borderRadius: token.borderRadius,
+        ':hover': {
+          backgroundColor: token.colorBgTextHover,
+        },
+      },
+      container: {
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100vh',
+        overflow: 'auto',
+        backgroundImage:
+          "url('https://mdn.alipayobjects.com/yuyan_qk0oxh/afts/img/V-_oS6r-i7wAAAAAAAAAAAAAFl94AQBr')",
+        backgroundSize: '100% 100%',
+      },
+    };
+  });
+  
+  const Register: React.FC = () => {
+    const [type, setType] = useState<string>('account');
+    const {styles} = useStyles();
+  
+    // 表单提交
+    const handleSubmit = async (values: API.RegisterParams) => {
+  
+      // 简单校验: 密码和确认密码是否一致 类型和值都要一致 (必选项不用 长度不用)
+      const {userPassword, checkPassword} = values;
+      if (userPassword !== checkPassword) {
+        message.error('两次输入的密码不一致，请重新输入！');
+        return;
+      }
+  
+      try {
+        // 注册
+        const id = await register(values);
+        if (id > 0) {
+          const defaultRegisterSuccessMessage = '注册成功！';
+          message.success(defaultRegisterSuccessMessage);
+  
+          const urlParams = new URL(window.location.href).searchParams;
+          history.push(urlParams.get('redirect') || '/user/login');
+          return;
+        }
+      } catch (error) {
+        const defaultLoginFailureMessage = '注册失败，请重试！';
+        console.log(error);
+        message.error(defaultLoginFailureMessage);
+      }
+    };
+  
+    return (
+      <div className={styles.container}>
+        <Helmet>
+          <title>
+            {'注册'}- {Settings.title}
+          </title>
+        </Helmet>
+        <div
+          style={{
+            flex: '1',
+            padding: '32px 0',
+          }}
+        >
+          <LoginForm
+            // 提交按钮的字样
+            submitter={{
+              searchConfig: {submitText: '注册'}
+            }}
+            contentStyle={{
+              minWidth: 280,
+              maxWidth: '75vw',
+            }}
+            logo={<img alt="logo" src={SYSTEM_LOGO}/>}
+            title="User Center From OSWIN"
+            subTitle={<a href={PLANET_LINK} target="_blank" rel="noopener noreferrer"> OSWIN: ALWAYS WIN </a>}
+            initialValues={{
+              autoLogin: true,
+            }}
+            onFinish={async (values) => {
+              await handleSubmit(values as API.RegisterParams);
+            }}
+          >
+            <Tabs
+              activeKey={type}
+              onChange={setType}
+              centered
+              items={[
+                {
+                  key: 'account',
+                  label: '账户密码注册',
+                }
+              ]}
+            />
+  
+            {type === 'account' && (
+              <>
+                <ProFormText
+                  name="userAccount"
+                  fieldProps={{
+                    size: 'large',
+                    prefix: <UserOutlined/>,
+                  }}
+                  placeholder={'请输入账户 ...'}
+                  rules={[
+                    {
+                      required: true,
+                      message: '账户是必填项！',
+                    },
+                  ]}
+                />
+                <ProFormText.Password
+                  name="userPassword"
+                  fieldProps={{
+                    size: 'large',
+                    prefix: <LockOutlined/>,
+                  }}
+                  placeholder={'请输入密码 ...'}
+                  rules={[
+                    {
+                      required: true,
+                      message: '密码是必填项！',
+                    },
+                  ]}
+                />
+                <ProFormText.Password
+                  name="checkPassword"
+                  fieldProps={{
+                    size: 'large',
+                    prefix: <LockOutlined/>,
+                  }}
+                  placeholder={'请输入确认密码 ...'}
+                  rules={[
+                    {
+                      required: true,
+                      message: '确认密码是必填项！',
+                    },
+                  ]}
+                />
+                <ProFormText
+                  name="planetCode"
+                  fieldProps={{
+                    size: 'large',
+                    prefix: <UserOutlined/>,
+                  }}
+                  placeholder={'请输入星球编号 ...'}
+                  rules={[
+                    {
+                      required: true,
+                      message: '星球编号是必填项！',
+                    },
+                  ]}
+                />
+              </>
+            )}
+  
+            <div
+              style={{
+                marginBottom: 24,
+              }}
+            >
+              <ProFormCheckbox noStyle name="autoLogin">
+                自动登录
+              </ProFormCheckbox>
+              <a
+                style={{
+                  float: 'right',
+                }}
+                href={'/user/login'}
+                rel="noreferrer"
+              >
+                用户登陆
+              </a>
+            </div>
+          </LoginForm>
+        </div>
+        <Footer/>
+      </div>
+    );
+  };
+  export default Register;
+  
+  ```
+  
+  
+
+
+
+### 页面：用户管理
+
+- src/pages/Admin.tsx
+
+  TODO
+
+  ```tsx
+  import {PageContainer} from '@ant-design/pro-components';
+  import React, {PropsWithChildren} from 'react';
+  
+  const Admin: React.FC = (props: PropsWithChildren) => {
+    const {children} = props;
+    return (
+      <PageContainer content={' 这个页面只有 admin 权限才能查看'}>
+        {children}
+      </PageContainer>
+    );
+  };
+  export default Admin;
   
   ```
 
+- src/pages/Admin/UserManage/index.tsx
+
+  [高级表格](https://procomponents.ant.design/components/table)
+
+  ```tsx
+  import type {ActionType, ProColumns} from '@ant-design/pro-components';
+  import {ProTable, TableDropdown} from '@ant-design/pro-components';
+  import {Image} from 'antd';
+  import {useRef} from 'react';
+  import {searchUsers} from "@/services/ant-design-pro/api";
+  
+  export const waitTimePromise = async (time: number = 100) => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(true);
+      }, time);
+    });
+  };
+  
+  export const waitTime = async (time: number = 100) => {
+    await waitTimePromise(time);
+  };
+  
+  const columns: ProColumns<API.CurrentUser>[] = [
+    {
+      dataIndex: 'id',  // map
+      valueType: "indexBorder",
+      width: 48,
+    },
+    {
+      title: '用户名',  // 展示在前端页面
+      dataIndex: 'username',  // 对应后端的字段名
+      copyable: true, // 是否可复制
+      // ellipsis: true, // 是否自动省略
+      // tip: '这是一段提示信息', // 鼠标悬停提示信息
+    },
+    {
+      title: "用户账户",
+      dataIndex: 'userAccount',
+      copyable: true,
+    },
+    {
+      title: '头像',
+      dataIndex: 'avatarUrl',
+      render: (_, record) => (  // 渲染逻辑 (一格, 一行)
+        <div>
+          <Image src={record.avatarUrl} width={100} height={100} />
+        </div>
+      )
+    },
+    {
+      title: "性别",
+      dataIndex: 'gender',
+      valueEnum: {
+        0: {text: '女'},
+        1: {text: '男'},
+      }
+    },
+    {
+      title: "电话",
+      dataIndex: 'phone',
+      copyable: true,
+    },
+    {
+      title: "邮箱",
+      dataIndex: 'email',
+      copyable: true,
+    },
+    {
+      title: "状态",
+      dataIndex: 'userStatus',
+      valueEnum: {
+        0: {text: '正常状态', status: 'Default'},
+        1: {text: '非正常状态', status: 'Error'},
+      }
+    },
+    {
+      title: "角色",
+      dataIndex: "userRole",
+      valueType: "select",  // 声明类型 否则默认字符串
+      valueEnum: {
+        0: {text: '普通用户', status: 'Default'},
+        1: {text: '管理员', status: 'Success'},
+      }
+    },
+    {
+      title: "星球编号",
+      dataIndex: "planetCode"
+    },
+    {
+      title: "创建时间",
+      dataIndex: "createTime",
+      valueType: "dateTime",  // 声明类型 否则默认字符串
+    },
+    {
+      title: "操作",
+      dataIndex: "option",
+      render: (text, record, _, action) => [
+        <a key="editable" onClick={() => {
+          action?.startEditable?.(record.id);
+        }}>编辑</a>,
+        <a target="_blank" rel={"noopener noreferrer"} key="view">查看</a>,
+        <TableDropdown key={"actionGroup"} onSelect={() => action?.reload()} menus={[
+          {key: 'copy', name: '复制'},
+          {key: 'delete', name: '删除'},
+        ]}/>
+      ]
+    }
+  ];
+  
+  export default () => {
+    const actionRef = useRef<ActionType>();
+    return (
+      <ProTable<API.CurrentUser>
+        columns={columns}
+        actionRef={actionRef}
+        cardBordered
+        request={async (params, sort, filter) => {
+          console.log(sort, filter);
+          const userList = await searchUsers();
+          return {
+            data: userList
+          }
+        }}
+        editable={{
+          type: 'multiple',
+        }}
+        columnsState={{
+          persistenceKey: 'pro-table-singe-demos',
+          persistenceType: 'localStorage',
+          defaultValue: {
+            option: {fixed: 'right', disable: true},
+          },
+          onChange(value) {
+            console.log('value: ', value);
+          },
+        }}
+        rowKey="id"
+        search={{
+          labelWidth: 'auto',
+        }}
+        options={{
+          setting: {
+            listsHeight: 400,
+          },
+        }}
+        form={{
+          // 由于配置了 transform，提交的参数与定义的不同这里需要转化一下
+          syncToUrl: (values, type) => {
+            if (type === 'get') {
+              return {
+                ...values,
+                created_at: [values.startTime, values.endTime],
+              };
+            }
+            return values;
+          },
+        }}
+        pagination={{
+          pageSize: 5,
+          onChange: (page) => console.log(page),
+        }}
+        dateFormatter="string"
+        headerTitle="高级表格"
+      />
+    );
+  };
+  
+  ```
+  
   
 
 
@@ -1052,6 +1767,197 @@
 - src/components/Footer/index.tsx
 
   ```tsx
+  import { GithubOutlined } from '@ant-design/icons';
+  import { DefaultFooter } from '@ant-design/pro-components';
+  import React from 'react';
+  import {PLANET_LINK} from "@/constants";
+  
+  const Footer: React.FC = () => {
+    const defaultMessage = 'From oswin';
+    const currentYear = new Date().getFullYear();
+  
+    return (
+      <DefaultFooter
+        copyright={`${currentYear} ${defaultMessage}`}
+        style={{
+          background: 'none',
+        }}
+        links={[
+          {
+            key: 'planet',
+            title: '知识星球',
+            href: PLANET_LINK,
+            blankTarget: true,
+          },
+          {
+            key: 'codeNav',
+            title: '编程导航',
+            href: 'https://www.code-nav.cn',
+            blankTarget: true,
+          },
+          {
+            key: 'github',
+            title: <><GithubOutlined/> oswin GitHub</>,
+            href: 'https://github.com/time1043',
+            blankTarget: true,
+          },
+  
+        ]}
+      />
+    );
+  };
+  
+  export default Footer;
+  
+  ```
+  
+  
+
+
+
+### 组件：AvatarDropdown
+
+- src/components/RightContent/AvatarDropdown.tsx
+
+  ```tsx
+  import { outLogin } from '@/services/ant-design-pro/api';
+  import { LogoutOutlined, SettingOutlined, UserOutlined } from '@ant-design/icons';
+  import { history, useModel } from '@umijs/max';
+  import { Spin } from 'antd';
+  import { createStyles } from 'antd-style';
+  import { stringify } from 'querystring';
+  import type { MenuInfo } from 'rc-menu/lib/interface';
+  import React, { useCallback } from 'react';
+  import { flushSync } from 'react-dom';
+  import HeaderDropdown from '../HeaderDropdown';
+  
+  export type GlobalHeaderRightProps = {
+    menu?: boolean;
+    children?: React.ReactNode;
+  };
+  
+  export const AvatarName = () => {
+    const { initialState } = useModel('@@initialState');
+    const { currentUser } = initialState || {};
+    return <span className="anticon">{currentUser?.username}</span>;
+  };
+  
+  const useStyles = createStyles(({ token }) => {
+    return {
+      action: {
+        display: 'flex',
+        height: '48px',
+        marginLeft: 'auto',
+        overflow: 'hidden',
+        alignItems: 'center',
+        padding: '0 8px',
+        cursor: 'pointer',
+        borderRadius: token.borderRadius,
+        '&:hover': {
+          backgroundColor: token.colorBgTextHover,
+        },
+      },
+    };
+  });
+  
+  export const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu, children }) => {
+    /**
+     * 退出登录，并且将当前的 url 保存
+     */
+    const loginOut = async () => {
+      await outLogin();
+      const { search, pathname } = window.location;
+      const urlParams = new URL(window.location.href).searchParams;
+      /** 此方法会跳转到 redirect 参数所在的位置 */
+      const redirect = urlParams.get('redirect');
+      // Note: There may be security issues, please note
+      if (window.location.pathname !== '/user/login' && !redirect) {
+        history.replace({
+          pathname: '/user/login',
+          search: stringify({
+            redirect: pathname + search,
+          }),
+        });
+      }
+    };
+    const { styles } = useStyles();
+  
+    const { initialState, setInitialState } = useModel('@@initialState');
+  
+    const onMenuClick = useCallback(
+      (event: MenuInfo) => {
+        const { key } = event;
+        if (key === 'logout') {
+          flushSync(() => {
+            setInitialState((s) => ({ ...s, currentUser: undefined }));
+          });
+          loginOut();
+          return;
+        }
+        history.push(`/account/${key}`);
+      },
+      [setInitialState],
+    );
+  
+    const loading = (
+      <span className={styles.action}>
+        <Spin
+          size="small"
+          style={{
+            marginLeft: 8,
+            marginRight: 8,
+          }}
+        />
+      </span>
+    );
+  
+    if (!initialState) {
+      return loading;
+    }
+  
+    const { currentUser } = initialState;
+  
+    if (!currentUser || !currentUser.username) {
+      return loading;
+    }
+  
+    const menuItems = [
+      ...(menu
+        ? [
+            {
+              key: 'center',
+              icon: <UserOutlined />,
+              label: '个人中心',
+            },
+            {
+              key: 'settings',
+              icon: <SettingOutlined />,
+              label: '个人设置',
+            },
+            {
+              type: 'divider' as const,
+            },
+          ]
+        : []),
+      {
+        key: 'logout',
+        icon: <LogoutOutlined />,
+        label: '退出登录',
+      },
+    ];
+  
+    return (
+      <HeaderDropdown
+        menu={{
+          selectedKeys: [],
+          onClick: onMenuClick,
+          items: menuItems,
+        }}
+      >
+        {children}
+      </HeaderDropdown>
+    );
+  };
   
   ```
 
@@ -1059,13 +1965,7 @@
 
 
 
-### 组件 X
-
-
-
-
-
-### 前后端交互
+### 前后端交互 (前端请求)
 
 - 前端向后端发请求
 
@@ -1079,16 +1979,28 @@
 
 
 
-### 前后端交互：用户登陆
+### 前后端交互：登陆注册
+
+- 任务
+
+  用户登陆 (用户态信息)
+
+  获取当前用户
+
+
+
+---
 
 - 登陆页面 src/pages/User/Login/index.tsx
 
   onFinish
 
   ```tsx
+          <LoginForm
             onFinish={async (values) => {
               await handleSubmit(values as API.LoginParams);
             }}
+  
   ```
 
   handleSubmit
@@ -1103,6 +2015,23 @@
   API.LoginParams (src/services/ant-design-pro/typings.d.ts)
 
   ```typescript
+  declare namespace API {
+    // user/current
+    type CurrentUser = {
+      id: number,
+      username?: string,
+      userAccount?: string,
+      avatarUrl?: string,
+      gender?: number,
+      phone?: string,
+      email?: string,
+      userStatus?: number,
+      createTime?: Date,
+      userRole?: number,
+      planetCode?: string,
+    };
+  
+    // user/login
     type LoginParams = {
       userAccount?: string;
       userPassword?: string;
@@ -1115,16 +2044,27 @@
       type?: string;
       currentAuthority?: string;
     };
+  
+    // user/register
+    type RegisterParams = {
+      userAccount?: string;
+      userPassword?: string;
+      checkPassword?: string;
+      planetCode?: string;
+      type?: string;
+    };
+  
+    type RegisterResult = number;
   ```
 
-- 登陆请求
+- 发送请求
 
   login (src/services/ant-design-pro/api.ts)
 
   ```typescript
-  /** 登录接口 POST /api/login/account */
+  /** 登录接口 POST /api/user/login */
   export async function login(body: API.LoginParams, options?: { [key: string]: any }) {
-    return request<API.LoginResult>('/api/login/account', {
+    return request<API.LoginResult>('/api/user/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -1133,65 +2073,81 @@
       ...(options || {}),
     });
   }
+  
+  /** 注册接口 POST /api/user/register */
+  export async function register(body: API.RegisterParams, options?: { [key: string]: any }) {
+    return request<API.RegisterResult>('/api/user/register', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      data: body,
+      ...(options || {}),
+    });
+  }
+  
+  /** 获取当前的用户 GET /api/user/current */
+  export async function currentUser(options?: { [key: string]: any }) {
+    return request<API.CurrentUser>('/api/user/current', {
+      method: 'GET',
+      ...(options || {}),
+    });
+  }
+  
+  /** 退出登录接口 POST /api/user/logout */
+  export async function outLogin(options?: { [key: string]: any }) {
+    return request<Record<string, any>>('/api/user/logout', {
+      method: 'POST',
+      ...(options || {}),
+    });
+  }
+  
+  /** 搜索用户接口 GET /api/user/search */
+  export async function searchUsers(options?: { [key: string]: any }) {
+    return request<API.CurrentUser[]>('/api/user/search', {
+      method: 'GET',
+      ...(options || {}),
+    });
+  }
+  
+  ```
+  
+  
+
+
+
+### 跨域问题
+
+- 代理
+
+  正向代理：替客户端 向服务器发送请求
+
+  反向代理：替服务器 接收请求
+
+- 代理实现
+
+  nginx服务器、nodejs服务器
+
+- 简单实现
+
+  config/proxy.ts
+
+  ```typescript
+  export default {
+    // 如果需要自定义本地开发服务器  请取消注释按需调整
+    dev: {
+      // localhost:8000/api/** -> https://preview.pro.ant.design/api/**
+      '/api/': {
+        // 要代理的地址  // http !!!
+        target: 'http://localhost:8080',
+        // 配置了这个可以从 http 代理到 https
+        // 依赖 origin 的功能可能需要这个，比如 cookie
+        changeOrigin: true,
+      },
+    },
   ```
 
-  request (src/.umi/plugin-request/request.ts) https://umijs.org/docs/max/request#request
-  
-  ```typescript
-  const request: IRequest = (url: string, opts: any = { method: 'GET' }) => {
-  
-  
-  function useRequest(service: any, options: any = {}) {
-    return useUmiRequest(service, {
-      formatResult: result => result?.data,
-      requestMethod: (requestOptions: any) => {
-          
-  
-  // request 方法 opts 参数的接口
-  interface IRequestOptions extends AxiosRequestConfig {
-    skipErrorHandler?: boolean;
-    requestInterceptors?: IRequestInterceptorTuple[];
-    responseInterceptors?: IResponseInterceptorTuple[];
-    [key: string]: any;
-  }
-  
-  
-  export interface RequestConfig<T = any> extends AxiosRequestConfig {
-    errorConfig?: {
-      errorHandler?: IErrorHandler;
-      errorThrower?: ( res: T ) => void
-    };
-    requestInterceptors?: IRequestInterceptorTuple[];
-    responseInterceptors?: IResponseInterceptorTuple[];
-  }
-  
-  let requestInstance: AxiosInstance;
-  let config: RequestConfig;
-  const getConfig = (): RequestConfig => {
-    if (config) return config;
-    config = getPluginManager().applyPlugins({
-      key: 'request',
-      type: ApplyPluginsType.modify,
-      initialValue: {},
-    });
-    return config;
-  };
-  
-  const getRequestInstance = (): AxiosInstance => {
-    if (requestInstance) return requestInstance;
-    const config = getConfig();
-    requestInstance = axios.create(config);
-  
-      
-  ```
-  
-  
-  
-  ```
-  
-  ```
-  
-  
+  ![](res/UserCenter/FrontendProxy.png)
 
 
 
@@ -1372,8 +2328,8 @@
   ```java
   package com.time1043.usercenterbackend.service;
   
-  import com.time1043.usercenterbackend.model.domain.User;
   import com.baomidou.mybatisplus.extension.service.IService;
+  import com.time1043.usercenterbackend.model.domain.User;
   
   import javax.servlet.http.HttpServletRequest;
   
@@ -1407,12 +2363,12 @@
        * 用户注销
        *
        * @param request http请求
-       * @return 返回用户id，返回-1表示失败
+       * @return 返回1表示注销成功
        */
       int userLogout(HttpServletRequest request);
   
       /**
-       * 获取脱敏的用户信息
+       * 获取脱敏的用户信息 (工具类)
        *
        * @param originalUser 原始用户信息
        * @return 脱敏后的用户信息
@@ -1467,7 +2423,7 @@
       /**
        * 密码加盐
        */
-      private static final String SALT = "oswin";
+      private static final String SALT = "salt";
   
       /**
        * 用户注册
@@ -1475,21 +2431,25 @@
        * @param userAccount   用户账号
        * @param userPassword  用户密码
        * @param checkPassword 确认密码
+       * @param planetCode    星球编码 (用户校验)
        * @return 用户id 注册失败返回-1
        */
       @Override
-      public long userRegister(String userAccount, String userPassword, String checkPassword) {
+      public long userRegister(String userAccount, String userPassword, String checkPassword, String planetCode) {
           // #################################################
           // 校验
           // #################################################
           // 空字符串 位数过少
-          if (StringUtils.isAllBlank(userAccount, userPassword, checkPassword)) {
+          if (StringUtils.isAllBlank(userAccount, userPassword, checkPassword, planetCode)) {
               return -1;  // TODO 后续封装自定义异常类
           }
           if (userAccount.length() < 4) {
               return -1;
           }
           if (userPassword.length() < 8 || checkPassword.length() < 8) {
+              return -1;
+          }
+          if (planetCode.length() > 12) {
               return -1;
           }
           // 账户不能包含特殊字符 正则
@@ -1509,6 +2469,13 @@
           if (count > 0) {
               return -1;
           }
+          // 星球编号不能重复 数据库查询
+          queryWrapper.clear();
+          queryWrapper.eq("planetCode", planetCode);
+          count = userMapper.selectCount(queryWrapper);
+          if (count > 0) {
+              return -1;
+          }
   
           // #################################################
           // 加密
@@ -1521,6 +2488,9 @@
           User user = new User();
           user.setUserAccount(userAccount);
           user.setUserPassword(encryptPassword);
+          user.setPlanetCode(planetCode);
+          user.setUsername("username");
+          user.setAvatarUrl("https://miro.medium.com/v2/resize:fit:640/format:webp/0*1Og_hmJWdlMiDWuB.png");
           boolean saveResult = this.save(user);  // this.  service.
           if (!saveResult) {
               return -1;
@@ -1565,7 +2535,7 @@
           String encryptPassword = DigestUtils.md5DigestAsHex((userPassword + SALT).getBytes());
   
           // #################################################
-          // 查询数据库
+          // 查询数据库 (查不到逻辑逻辑删除的)
           // #################################################
           QueryWrapper<User> queryWrapper = new QueryWrapper<>();
           queryWrapper.eq("userAccount", userAccount);
@@ -1602,7 +2572,7 @@
       }
   
       /**
-       * 获取脱敏用户信息
+       * 获取脱敏用户信息 (工具类)
        *
        * @param originalUser 原始用户信息
        * @return 脱敏后的用户信息
@@ -1623,6 +2593,7 @@
           safetyUser.setPhone(originalUser.getPhone());
           safetyUser.setEmail(originalUser.getEmail());
           safetyUser.setUserRole(originalUser.getUserRole());
+          safetyUser.setPlanetCode(originalUser.getPlanetCode());
           safetyUser.setUserStatus(originalUser.getUserStatus());
           safetyUser.setCreateTime(originalUser.getCreateTime());
           return safetyUser;
@@ -1766,6 +2737,7 @@
               return null;
           }
   
+          // plugin: auto filling java call arguments
           String userAccount = userRegisterRequest.getUserAccount();
           String userPassword = userRegisterRequest.getUserPassword();
           String checkPassword = userRegisterRequest.getCheckPassword();
@@ -1793,6 +2765,15 @@
               return null;
           }
           return userService.userLogin(userAccount, userPassword, request);
+      }
+  
+      @PostMapping("/logout")
+      public int userLogout(HttpServletRequest request) {
+          if (request == null) {
+              return 0;  // 0表示注销失败
+          }
+  
+          return userService.userLogout(request);  // 1表示注销成功
       }
   
       @GetMapping("/current")
@@ -1823,7 +2804,9 @@
               queryWrapper.like("username", username);
           }
           List<User> userList = userService.list(queryWrapper);
-          return userList.stream().map(user -> userService.getSafetyUser(user)).collect(Collectors.toList());
+          return userList.stream().map(
+                  user -> userService.getSafetyUser(user)
+          ).collect(Collectors.toList());  // 脱敏
       }
   
       @PostMapping("/delete")
@@ -1919,6 +2902,7 @@
       private String userAccount;
       private String userPassword;
       private String checkPassword;
+      private String planetCode;
   }
   
   ```
@@ -1986,6 +2970,28 @@
 
 
 
+## 后端优化：用户模块
+
+- 优化
+
+  封装通用返回对象
+
+  
+
+
+
+### 数据模型 (model)
+
+
+
+
+
+### 常量类 (constrant)
+
+
+
+
+
 ### 自定义异常
 
 
@@ -2002,7 +3008,9 @@
 
 ## 项目优化
 
+- 优化方向
 
+  应用场景：外卖管理系统 (外卖柜)
 
 
 

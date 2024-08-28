@@ -44,21 +44,25 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
      * @param userAccount   用户账号
      * @param userPassword  用户密码
      * @param checkPassword 确认密码
+     * @param planetCode    星球编码 (用户校验)
      * @return 用户id 注册失败返回-1
      */
     @Override
-    public long userRegister(String userAccount, String userPassword, String checkPassword) {
+    public long userRegister(String userAccount, String userPassword, String checkPassword, String planetCode) {
         // #################################################
         // 校验
         // #################################################
         // 空字符串 位数过少
-        if (StringUtils.isAllBlank(userAccount, userPassword, checkPassword)) {
+        if (StringUtils.isAllBlank(userAccount, userPassword, checkPassword, planetCode)) {
             return -1;  // TODO 后续封装自定义异常类
         }
         if (userAccount.length() < 4) {
             return -1;
         }
         if (userPassword.length() < 8 || checkPassword.length() < 8) {
+            return -1;
+        }
+        if (planetCode.length() > 12) {
             return -1;
         }
         // 账户不能包含特殊字符 正则
@@ -78,6 +82,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         if (count > 0) {
             return -1;
         }
+        // 星球编号不能重复 数据库查询
+        queryWrapper.clear();
+        queryWrapper.eq("planetCode", planetCode);
+        count = userMapper.selectCount(queryWrapper);
+        if (count > 0) {
+            return -1;
+        }
 
         // #################################################
         // 加密
@@ -90,6 +101,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         User user = new User();
         user.setUserAccount(userAccount);
         user.setUserPassword(encryptPassword);
+        user.setPlanetCode(planetCode);
+        user.setUsername("username");
+        user.setAvatarUrl("https://miro.medium.com/v2/resize:fit:640/format:webp/0*1Og_hmJWdlMiDWuB.png");
         boolean saveResult = this.save(user);  // this.  service.
         if (!saveResult) {
             return -1;
@@ -171,7 +185,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     }
 
     /**
-     * 获取脱敏用户信息
+     * 获取脱敏用户信息 (工具类)
      *
      * @param originalUser 原始用户信息
      * @return 脱敏后的用户信息
@@ -192,6 +206,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         safetyUser.setPhone(originalUser.getPhone());
         safetyUser.setEmail(originalUser.getEmail());
         safetyUser.setUserRole(originalUser.getUserRole());
+        safetyUser.setPlanetCode(originalUser.getPlanetCode());
         safetyUser.setUserStatus(originalUser.getUserStatus());
         safetyUser.setCreateTime(originalUser.getCreateTime());
         return safetyUser;

@@ -20,21 +20,34 @@ create table user
     updateTime   timestamp default current_timestamp on update current_timestamp comment '更新时间',
     isDelete     tinyint   default 0 comment '逻辑删除标志',
     -- 补充
-    userRole     int       default 0 comment '用户角色 0是普通用户 1是管理员'
+    userRole     int       default 0 comment '用户角色 0是普通用户 1是管理员',
+    planetCode   varchar(512) null comment '星球编号'
 ) comment '用户';
 
 insert into user (username, useraccount, avatarurl, gender, userpassword, phone, email, userstatus,
                   createtime, updatetime, isdelete,
-                  userrole)
+                  userrole, planetCode)
 values ('oswin', 'oswin501',
         'https://miro.medium.com/v2/resize:fit:640/format:webp/1*4j2A9niz0eq-mRaCPUffpg.png', 1,
         'c9d21e89dc04f9f2b446b4fbdafdf4b8',
         '15534340089', 'oswin501@gmail.com', 0,
         current_timestamp, current_timestamp, 0,
-        1),
+        1, 'nn00000001'),
        ('yupi', 'yupi501',
-        'https://pic6.sucaisucai.com/01/88/01388996_2.jpg', 1,
+        'https://miro.medium.com/v2/resize:fit:640/format:webp/0*1Og_hmJWdlMiDWuB.png', 1,
         'c9d21e89dc04f9f2b446b4fbdafdf4b8',
         '15534340089', 'yupi501@gmail.com', 0,
         current_timestamp, current_timestamp, 0,
-        0);
+        0, 'nn00000002'),
+       ('yupi2', 'yupi502',
+        'https://miro.medium.com/v2/resize:fit:640/format:webp/0*1Og_hmJWdlMiDWuB.png', 1,
+        'c9d21e89dc04f9f2b446b4fbdafdf4b8',
+        '15534340089', 'yupi501@gmail.com', 0,
+        current_timestamp, current_timestamp, 1,
+        0, 'nn00000003'),
+       ('yupi3', 'yupi503',
+        'https://miro.medium.com/v2/resize:fit:640/format:webp/0*1Og_hmJWdlMiDWuB.png', 1,
+        'c9d21e89dc04f9f2b446b4fbdafdf4b8',
+        '15534340089', 'yupi501@gmail.com', 1,
+        current_timestamp, current_timestamp, 0,
+        0, 'nn00000004');

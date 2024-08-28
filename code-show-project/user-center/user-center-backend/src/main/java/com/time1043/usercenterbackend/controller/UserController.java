@@ -39,12 +39,13 @@ public class UserController {
         String userAccount = userRegisterRequest.getUserAccount();
         String userPassword = userRegisterRequest.getUserPassword();
         String checkPassword = userRegisterRequest.getCheckPassword();
+        String planetCode = userRegisterRequest.getPlanetCode();
 
         // 粗略校验 (controller层对请求参数的校验 没有涉及业务逻辑)
-        if (StringUtils.isAnyBlank(userAccount, userPassword, checkPassword)) {
+        if (StringUtils.isAnyBlank(userAccount, userPassword, checkPassword, planetCode)) {
             return null;
         }
-        return userService.userRegister(userAccount, userPassword, checkPassword);
+        return userService.userRegister(userAccount, userPassword, checkPassword, planetCode);
     }
 
     @PostMapping("/login")
@@ -63,6 +64,15 @@ public class UserController {
             return null;
         }
         return userService.userLogin(userAccount, userPassword, request);
+    }
+
+    @PostMapping("/logout")
+    public int userLogout(HttpServletRequest request) {
+        if (request == null) {
+            return 0;  // 0表示注销失败
+        }
+
+        return userService.userLogout(request);  // 1表示注销成功
     }
 
     @GetMapping("/current")
