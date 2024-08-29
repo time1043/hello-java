@@ -513,8 +513,11 @@
   mkdir src/constants
   touch src/constants/index.ts
   
+  mkdir src/plugins
+  touch src/plugins/globalRequest.ts
+  
   ```
-
+  
   
 
 
@@ -579,6 +582,27 @@
 
   `MyBatisX` 操作：MyBatisX-Generator -> module path ->  annotation (MyBatis-Plus3) options (comment lombok actualColumn Model)  template (mybatis-plus3)
 
+- IDEA定义快捷方式
+
+  settings -> live template 
+
+  -> add group -> JavaCustom 
+
+  -> add template -> Abbreviation: ...; Description: ...; Template text: ...; Define: java
+
+  ```
+  rusc
+  Returns the successful packaging class
+  return ResultUtils.success($END$);
+  
+  ruerr
+  Returns the error wrapper class
+  return ResultUtils.error($END$);
+  
+  therr
+  throw new BusinessException($END$);
+  
+  ```
   
 
 
@@ -676,7 +700,8 @@
   
   rm -rf src/main/resources/static/  # 前后端不分离
   cd src/main/java/com/time1043/usercenterbackend/ 
-  mkdir controller service mapper model contant utils  # springboot项目结构
+  mkdir controller service mapper model contant utils common  # springboot项目结构
+  touch src/main/java/com/time1043/usercenterbackend/common/BaseResponse.java
   
   # mybatis-x
   # localhost:8080/api/index.html
@@ -2611,6 +2636,7 @@
   import org.junit.jupiter.api.Assertions;
   import org.junit.jupiter.api.Test;
   import org.springframework.boot.test.context.SpringBootTest;
+  import org.springframework.util.DigestUtils;
   
   import javax.annotation.Resource;
   
@@ -2621,7 +2647,7 @@
    */
   @SpringBootTest
   class UserServiceTest {
-      
+  
       @Resource
       private UserService userService;
   
@@ -2631,64 +2657,67 @@
       @Test
       void testDigestPassword() {
           // spring 加密的工具类
-          String newPassword = DigestUtils.md5DigestAsHex(("123456" + "salt").getBytes());
-          System.out.println(newPassword);  // 207acd61a3c1bd506d7e9a4535359f8a
+          String newPassword = DigestUtils.md5DigestAsHex(("12345678" + "salt").getBytes());
+          System.out.println(newPassword);  // c9d21e89dc04f9f2b446b4fbdafdf4b8
       }
       
       /**
-       * 测试登陆逻辑 (业务层)
+       * 测试注册逻辑 (业务层)
        */
       @Test
       void testRegister() {
           String userAccount = "yingzhu2";
           String checkPassword = "123456";
+          String planetCode = "nn00000009";
   
           // 非空检验
           String userPassword = "";
-          long result = userService.userRegister(userAccount, userPassword, checkPassword);
+          long result = userService.userRegister(userAccount, userPassword, checkPassword, planetCode);
           Assertions.assertEquals(-1, result);
   
           // 账户长度不小于4
           userAccount = "yz";
-          result = userService.userRegister(userAccount, userPassword, checkPassword);
+          result = userService.userRegister(userAccount, userPassword, checkPassword, planetCode);
           Assertions.assertEquals(-1, result);
   
           // 密码长度不小于8
           userAccount = "yingzhu2";
           userPassword = "123456";
-          result = userService.userRegister(userAccount, userPassword, checkPassword);
+          result = userService.userRegister(userAccount, userPassword, checkPassword, planetCode);
           Assertions.assertEquals(-1, result);
   
           // 账户不包含特殊字符
           userAccount = "yingzhu2#";
           userPassword = "12345678";
-          result = userService.userRegister(userAccount, userPassword, checkPassword);
+          result = userService.userRegister(userAccount, userPassword, checkPassword, planetCode);
           Assertions.assertEquals(-1, result);
   
           // 账户名不能重复
           userAccount = "yingzhu";
           userPassword = "12345678";
-          result = userService.userRegister(userAccount, userPassword, checkPassword);
+          result = userService.userRegister(userAccount, userPassword, checkPassword, planetCode);
           Assertions.assertEquals(-1, result);
   
           // 密码和校验密码不一致
           userAccount = "yingzhu2";
           userPassword = "12345678";
           checkPassword = "123456789";
-          result = userService.userRegister(userAccount, userPassword, checkPassword);
+          result = userService.userRegister(userAccount, userPassword, checkPassword, planetCode);
           Assertions.assertEquals(-1, result);
+  
+          // planetCode TODO
   
           // 成功的
           userAccount = "yingzhu2";
           userPassword = "12345678";
           checkPassword = "12345678";
-          result = userService.userRegister(userAccount, userPassword, checkPassword);
+          result = userService.userRegister(userAccount, userPassword, checkPassword, planetCode);
           Assertions.assertTrue(result > 0);
       }
   }
   
   ```
-
+  
   
 
 
@@ -2972,37 +3001,900 @@
 
 ## 后端优化：用户模块
 
-- 优化
+- 优化 (造语法糖)
 
-  封装通用返回对象
+  封装通用返回对象 (明确业务的成功或失败)、自定义错误码
+
+  封装异常类、全局异常处理器 (捕获后端所有异常内部消化集中处理 不给前端500 给前端详细错误)
+
+  TODO 全局请求日志、登陆校验
+
+- 效果
+
+  ```json
+  {
+      "code": 0,  // 精准 业务状态码
+      "data": {
+          "username": "oswin"
+      },
+      "message": "ok"
+  }
+  
+  
+  {
+      "code": 50001,  // 精准 业务状态码
+      "data": null,
+      "message": "xxx"
+  }
+  
+  ```
 
   
 
 
 
-### 数据模型 (model)
+### 通用返回对象
+
+- src/main/java/com/time1043/usercenterbackend/common/BaseResponse.java
+
+  ```java
+  package com.time1043.usercenterbackend.common;
+  
+  import lombok.Data;
+  
+  import java.io.Serializable;
+  
+  /**
+   * 通用返回对象
+   *
+   * @param <T>
+   * @author oswin
+   */
+  @Data
+  public class BaseResponse<T> implements Serializable {
+  
+      private int code;
+      private T data;
+      private String message;
+      private String description;
+  
+      public BaseResponse() {
+      }
+  
+      public BaseResponse(int code, T data, String message, String description) {
+          this.code = code;
+          this.data = data;
+          this.message = message;
+          this.description = description;
+      }
+  
+      public BaseResponse(int code, T data, String message) {
+          this(code, data, message, "");
+      }
+  
+      public BaseResponse(int code, T data) {
+          this(code, data, "", "");
+      }
+  
+      public BaseResponse(ErrorCode errorCode) {
+          this(errorCode.getCode(), null, errorCode.getMessage(), errorCode.getDescription());
+      }
+  }
+  
+  ```
+
+  src/main/java/com/time1043/usercenterbackend/common/ResultUtils.java
+
+  ```java
+  package com.time1043.usercenterbackend.common;
+  
+  /**
+   * 返回工具类
+   *
+   * @author oswin
+   */
+  public class ResultUtils {
+  
+      /**
+       * 成功返回
+       *
+       * @param data 返回数据
+       * @param <T>  数据类型
+       * @return 成功响应
+       */
+      public static <T> BaseResponse<T> success(T data) {
+          return new BaseResponse<>(0, data, "ok", "");
+      }
+  
+      /**
+       * 失败返回
+       *
+       * @param errorCode 错误码
+       * @return 失败响应
+       */
+      public static BaseResponse error(ErrorCode errorCode) {
+          return new BaseResponse<>(errorCode);
+      }
+  
+      public static BaseResponse error(int code, String message, String description) {
+          return new BaseResponse<>(code, null, message, description);
+      }
+  
+      public static BaseResponse error(ErrorCode errorCode, String description) {
+          return new BaseResponse<>(errorCode.getCode(), null, errorCode.getMessage(), description);
+      }
+  
+      public static BaseResponse error(ErrorCode errorCode, String message, String description) {
+          return new BaseResponse<>(errorCode.getCode(), null, message, description);
+      }
+  }
+  
+  ```
+
+- src/main/java/com/time1043/usercenterbackend/common/ErrorCode.java
+
+  ```java
+  package com.time1043.usercenterbackend.common;
+  
+  /**
+   * 全局错误码
+   *
+   * @author oswin
+   */
+  public enum ErrorCode {
+  
+      // 成功
+      SUCCESS(0, "ok", ""),
+      // 400 客户端错误
+      PARAMS_ERROR(40000, "请求参数错误", ""),
+      NULL_ERROR(40001, "请求数据为空", ""),
+      NOT_LOGIN_ERROR(40100, "未登录", ""),
+      NO_AUTH_ERROR(40101, "无权限", ""),
+      // 500 服务端错误
+      SYSTEM_ERROR(50000, "系统内部异常", "");
+  
+  
+      private final int code;
+      private final String message;  // 状态码信息
+      private final String description;  // 详情描述
+  
+      ErrorCode(int code, String message, String description) {
+          this.code = code;
+          this.message = message;
+          this.description = description;
+      }
+  
+      public int getCode() {
+          return code;
+      }
+  
+      public String getMessage() {
+          return message;
+      }
+  
+      public String getDescription() {
+          return description;
+      }
+  }
+  
+  ```
+
+  
+
+
+
+### 全局异常处理
+
+- src/main/java/com/time1043/usercenterbackend/exception/BusinessException.java
+
+  给原本的异常类RuntimeException扩充两个字段
+
+  自定义构造函数可以更灵活快捷地构造字段
+
+  ```java
+  package com.time1043.usercenterbackend.exception;
+  
+  import com.time1043.usercenterbackend.common.ErrorCode;
+  
+  /**
+   * 自定义异常类
+   *
+   * @author oswin
+   */
+  public class BusinessException extends RuntimeException {
+  
+      private final int code;
+      private final String description;
+  
+  
+      public BusinessException(String message, int code, String description) {
+          super(message);
+          this.code = code;
+          this.description = description;
+      }
+  
+      public BusinessException(ErrorCode errorCode) {
+          super(errorCode.getMessage());
+          this.code = errorCode.getCode();
+          this.description = errorCode.getDescription();
+      }
+  
+      public BusinessException(ErrorCode errorCode, String description) {
+          super(errorCode.getMessage());
+          this.code = errorCode.getCode();
+          this.description = description;
+      }
+  
+  
+      public int getCode() {
+          return code;
+      }
+  
+      public String getDescription() {
+          return description;
+      }
+  }
+  
+  ```
+
+  src/main/java/com/time1043/usercenterbackend/exception/GlobalExceptionHandler.java
+
+  SpringAOP 在调用方法前后进行额外处理
+
+  定义根据什么异常 做出什么处理
+
+  ```java
+  package com.time1043.usercenterbackend.exception;
+  
+  import com.time1043.usercenterbackend.common.BaseResponse;
+  import com.time1043.usercenterbackend.common.ErrorCode;
+  import com.time1043.usercenterbackend.common.ResultUtils;
+  import lombok.extern.slf4j.Slf4j;
+  import org.springframework.web.bind.annotation.ExceptionHandler;
+  import org.springframework.web.bind.annotation.RestControllerAdvice;
+  
+  /**
+   * 全局异常处理器
+   *
+   * @author oswin
+   */
+  @RestControllerAdvice
+  @Slf4j
+  public class GlobalExceptionHandler {
+  
+      @ExceptionHandler(BusinessException.class)
+      public BaseResponse<?> businessExceptionHandler(BusinessException e) {
+          log.error("[businessException] " + e.getDescription(), e);
+          return ResultUtils.error(e.getCode(), e.getMessage(), e.getDescription());
+      }
+  
+      @ExceptionHandler(RuntimeException.class)
+      public BaseResponse<?> runtimeExceptionHandler(RuntimeException e) {
+          log.error("[runtimeException] ", e);
+          return ResultUtils.error(ErrorCode.SYSTEM_ERROR, e.getMessage(), "");
+      }
+  }
+  
+  ```
+
+  
+
+
+
+### 业务逻辑层 (service) ✔
+
+- src/main/java/com/time1043/usercenterbackend/service/impl/UserServiceImpl.java
+
+  ```java
+  package com.time1043.usercenterbackend.service.impl;
+  
+  import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+  import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+  import com.time1043.usercenterbackend.common.ErrorCode;
+  import com.time1043.usercenterbackend.exception.BusinessException;
+  import com.time1043.usercenterbackend.mapper.UserMapper;
+  import com.time1043.usercenterbackend.model.domain.User;
+  import com.time1043.usercenterbackend.service.UserService;
+  import lombok.extern.slf4j.Slf4j;
+  import org.apache.commons.lang3.StringUtils;
+  import org.springframework.stereotype.Service;
+  import org.springframework.util.DigestUtils;
+  
+  import javax.annotation.Resource;
+  import javax.servlet.http.HttpServletRequest;
+  import java.util.regex.Matcher;
+  import java.util.regex.Pattern;
+  
+  import static com.time1043.usercenterbackend.contant.UserConstant.USER_LOGIN_STATE;
+  
+  /**
+   * @author oswin
+   * @description 针对表【user(用户)】的数据库操作Service实现
+   * @createDate 2024-08-25 13:56:11
+   */
+  @Service
+  @Slf4j
+  public class UserServiceImpl extends ServiceImpl<UserMapper, User>
+          implements UserService {
+  
+      /**
+       * 注入UserMapper
+       */
+      @Resource
+      private UserMapper userMapper;
+  
+      /**
+       * 密码加盐
+       */
+      private static final String SALT = "salt";
+  
+      /**
+       * 用户注册
+       *
+       * @param userAccount   用户账号
+       * @param userPassword  用户密码
+       * @param checkPassword 确认密码
+       * @param planetCode    星球编码 (用户校验)
+       * @return 用户id 注册失败返回-1
+       */
+      @Override
+      public long userRegister(String userAccount, String userPassword, String checkPassword, String planetCode) {
+          // #################################################
+          // 校验
+          // #################################################
+          // 空字符串 位数过少
+          if (StringUtils.isAllBlank(userAccount, userPassword, checkPassword, planetCode)) {
+              throw new BusinessException(ErrorCode.PARAMS_ERROR, "参数不能为空");
+          }
+          if (userAccount.length() < 4) {
+              throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户名长度不能少于4位");
+          }
+          if (userPassword.length() < 8 || checkPassword.length() < 8) {
+              throw new BusinessException(ErrorCode.PARAMS_ERROR, "密码长度不能少于8位");
+          }
+          if (planetCode.length() > 12) {
+              throw new BusinessException(ErrorCode.PARAMS_ERROR, "星球编码长度不能超过12位");
+          }
+          // 账户不能包含特殊字符 正则
+          String validPattern = "^[a-zA-Z0-9]+$";
+          Matcher matcher = Pattern.compile(validPattern).matcher(userAccount);
+          if (!matcher.find()) {
+              throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户名不能包含特殊字符");
+          }
+          // 密码和确认密码一致
+          if (!userPassword.equals(checkPassword)) {
+              throw new BusinessException(ErrorCode.PARAMS_ERROR, "密码和确认密码不一致");
+          }
+          // 账户不能重复 数据库查询 (性能消耗的放后面!!)
+          QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+          queryWrapper.eq("userAccount", userAccount);
+          Long count = userMapper.selectCount(queryWrapper);  // this.count(queryWrapper);
+          if (count > 0) {
+              throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户名已存在");
+          }
+          // 星球编号不能重复 数据库查询
+          queryWrapper.clear();
+          queryWrapper.eq("planetCode", planetCode);
+          count = userMapper.selectCount(queryWrapper);
+          if (count > 0) {
+              throw new BusinessException(ErrorCode.PARAMS_ERROR, "星球编号已存在");
+          }
+  
+          // #################################################
+          // 加密
+          // #################################################
+          String encryptPassword = DigestUtils.md5DigestAsHex((userPassword + SALT).getBytes());
+  
+          // #################################################
+          // 插入数据库
+          // #################################################
+          User user = new User();
+          user.setUserAccount(userAccount);
+          user.setUserPassword(encryptPassword);
+          user.setPlanetCode(planetCode);
+          user.setUsername("username");
+          user.setAvatarUrl("https://miro.medium.com/v2/resize:fit:640/format:webp/0*1Og_hmJWdlMiDWuB.png");
+          boolean saveResult = this.save(user);  // this.  service.
+          if (!saveResult) {
+              throw new BusinessException(ErrorCode.SYSTEM_ERROR);
+          }
+  
+          return user.getId();
+      }
+  
+      /**
+       * 用户登录
+       *
+       * @param userAccount  用户账号
+       * @param userPassword 用户密码
+       * @param request      http请求
+       * @return 登录成功返回用户对象，登录失败返回null
+       */
+      @Override
+      public User userLogin(String userAccount, String userPassword, HttpServletRequest request) {
+          // #################################################
+          // 校验
+          // #################################################
+          // 空字符串 位数过少
+          if (StringUtils.isAllBlank(userAccount, userPassword)) {
+              throw new BusinessException(ErrorCode.PARAMS_ERROR, "参数不能为空");
+          }
+          if (userAccount.length() < 4) {
+              throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户名长度不能少于4位");
+          }
+          if (userPassword.length() < 8) {
+              throw new BusinessException(ErrorCode.PARAMS_ERROR, "密码长度不能少于8位");
+          }
+          // 账户不能包含特殊字符 正则
+          String validPattern = "^[a-zA-Z0-9]+$";
+          Matcher matcher = Pattern.compile(validPattern).matcher(userAccount);
+          if (!matcher.find()) {
+              throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户名不能包含特殊字符");
+          }
+  
+          // #################################################
+          // 加密
+          // #################################################
+          String encryptPassword = DigestUtils.md5DigestAsHex((userPassword + SALT).getBytes());
+  
+          // #################################################
+          // 查询数据库 (查不到逻辑逻辑删除的)
+          // #################################################
+          QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+          queryWrapper.eq("userAccount", userAccount);
+          queryWrapper.eq("userPassword", encryptPassword);
+          User user = userMapper.selectOne(queryWrapper);
+          // 用户名或密码错误 or 用户不存在
+          if (user == null) {
+              log.info("user login failed, userAccount: {}, userPassword: {}", userAccount, userPassword);
+              throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户名或密码错误");
+          }
+          // TODO 限流策略
+  
+          // #################################################
+          // 放行登陆
+          // #################################################
+          // 脱敏处理
+          User safetyUser = getSafetyUser(user);
+          // 记录用户登录态 session cookie
+          request.getSession().setAttribute(USER_LOGIN_STATE, safetyUser);  // k v
+          return safetyUser;
+      }
+  
+      /**
+       * 用户注销
+       *
+       * @param request http请求
+       * @return 返回1表示注销成功
+       */
+      @Override
+      public int userLogout(HttpServletRequest request) {
+          // 移出登陆态 session cookie
+          request.getSession().removeAttribute(USER_LOGIN_STATE);
+          return 1;
+      }
+  
+      /**
+       * 获取脱敏用户信息 (工具类)
+       *
+       * @param originalUser 原始用户信息
+       * @return 脱敏后的用户信息
+       */
+      @Override
+      public User getSafetyUser(User originalUser) {
+          // 空处理
+          if (originalUser == null) {
+              return null;
+          }
+  
+          User safetyUser = new User();
+          safetyUser.setId(originalUser.getId());
+          safetyUser.setUsername(originalUser.getUsername());
+          safetyUser.setUserAccount(originalUser.getUserAccount());
+          safetyUser.setAvatarUrl(originalUser.getAvatarUrl());
+          safetyUser.setGender(originalUser.getGender());
+          safetyUser.setPhone(originalUser.getPhone());
+          safetyUser.setEmail(originalUser.getEmail());
+          safetyUser.setUserRole(originalUser.getUserRole());
+          safetyUser.setPlanetCode(originalUser.getPlanetCode());
+          safetyUser.setUserStatus(originalUser.getUserStatus());
+          safetyUser.setCreateTime(originalUser.getCreateTime());
+          return safetyUser;
+      }
+  }
+  
+  ```
+
+  
+
+
+
+### 接口访问层 (controller) ✔
+
+- src/main/java/com/time1043/usercenterbackend/controller/UserController.java
+
+  ```java
+  package com.time1043.usercenterbackend.controller;
+  
+  import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+  import com.time1043.usercenterbackend.common.BaseResponse;
+  import com.time1043.usercenterbackend.common.ErrorCode;
+  import com.time1043.usercenterbackend.common.ResultUtils;
+  import com.time1043.usercenterbackend.exception.BusinessException;
+  import com.time1043.usercenterbackend.model.domain.User;
+  import com.time1043.usercenterbackend.model.domain.request.UserLoginRequest;
+  import com.time1043.usercenterbackend.model.domain.request.UserRegisterRequest;
+  import com.time1043.usercenterbackend.service.UserService;
+  import org.apache.commons.lang3.StringUtils;
+  import org.springframework.web.bind.annotation.*;
+  
+  import javax.annotation.Resource;
+  import javax.servlet.http.HttpServletRequest;
+  import java.util.List;
+  import java.util.stream.Collectors;
+  
+  import static com.time1043.usercenterbackend.contant.UserConstant.ADMIN_ROLE;
+  import static com.time1043.usercenterbackend.contant.UserConstant.USER_LOGIN_STATE;
+  
+  /**
+   * 用户接口
+   *
+   * @author oswin
+   */
+  @RestController  // restful风格api  返回值默认json
+  @RequestMapping("/user")
+  public class UserController {
+  
+      @Resource
+      private UserService userService;
+  
+      @PostMapping("/register")
+      public BaseResponse<Long> userRegister(@RequestBody UserRegisterRequest userRegisterRequest) {
+          if (userRegisterRequest == null) {
+              // return ResultUtils.error(ErrorCode.PARAMS_ERROR);  // way1: ugly (通用返回对象 + 自定义错误码)
+              throw new BusinessException(ErrorCode.PARAMS_ERROR, "请求参数错误");  // way2: better (+ 封装异常类)
+          }
+  
+          // plugin: auto filling java call arguments
+          String userAccount = userRegisterRequest.getUserAccount();
+          String userPassword = userRegisterRequest.getUserPassword();
+          String checkPassword = userRegisterRequest.getCheckPassword();
+          String planetCode = userRegisterRequest.getPlanetCode();
+  
+          // 粗略校验 (controller层对请求参数的校验 没有涉及业务逻辑)
+          if (StringUtils.isAnyBlank(userAccount, userPassword, checkPassword, planetCode)) {
+              throw new BusinessException(ErrorCode.PARAMS_ERROR, "账户、密码、确认密码、星球编号不能为空");
+          }
+          long result = userService.userRegister(userAccount, userPassword, checkPassword, planetCode);  // user id
+  
+          // return new BaseResponse<>(0, result, "ok");  // way1: ugly (通用返回对象)
+          return ResultUtils.success(result);  // way2: better (+ 返回对象工具类)
+      }
+  
+      @PostMapping("/login")
+      public BaseResponse<User> userLogin(
+              @RequestBody UserLoginRequest userLoginRequest,
+              HttpServletRequest request
+      ) {
+          if (userLoginRequest == null) {
+              throw new BusinessException(ErrorCode.PARAMS_ERROR, "请求参数错误");
+          }
+  
+          String userAccount = userLoginRequest.getUserAccount();
+          String userPassword = userLoginRequest.getUserPassword();
+  
+          if (StringUtils.isAnyBlank(userAccount, userPassword)) {
+              throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户名或密码不能为空");
+          }
+          User user = userService.userLogin(userAccount, userPassword, request);
+          return ResultUtils.success(user);
+      }
+  
+      @PostMapping("/logout")
+      public BaseResponse<Integer> userLogout(HttpServletRequest request) {
+          if (request == null) {
+              throw new BusinessException(ErrorCode.PARAMS_ERROR, "请求参数错误");
+          }
+  
+          int result = userService.userLogout(request);
+          return ResultUtils.success(result);
+      }
+  
+      @GetMapping("/current")
+      public BaseResponse<User> getCurrentUser(HttpServletRequest request) {
+          // 从请求中拿到登录态 cookie
+          Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
+          User currentUser = (User) userObj;
+          if (currentUser == null) {
+              throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, "用户未登录");
+          }
+  
+          // 数据库查询 (如果有积分信息)
+          Long userId = currentUser.getId();
+          User user = userService.getById(userId);
+          // TODO 用户状态可能处于封号状态
+          User safetyUser = userService.getSafetyUser(user);
+          return ResultUtils.success(safetyUser);
+      }
+  
+      @GetMapping("/search")
+      public BaseResponse<List<User>> searchUser(String username, HttpServletRequest request) {
+          // 非管理员禁止搜索
+          if (!isAdmin(request)) {
+              throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "非管理员禁止搜索");
+          }
+  
+          QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+          if (StringUtils.isNotBlank(username)) {
+              queryWrapper.like("username", username);
+          }
+          List<User> userList = userService.list(queryWrapper);
+          List<User> safetyUserList = userList.stream().map(
+                  user -> userService.getSafetyUser(user)
+          ).collect(Collectors.toList());
+          return ResultUtils.success(safetyUserList);
+      }
+  
+      @PostMapping("/delete")
+      public BaseResponse<Boolean> deleteUser(@RequestBody long id, HttpServletRequest request) {
+          // 非管理员禁止删除
+          if (!isAdmin(request)) {
+              throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "非管理员禁止删除");
+          }
+          if (id <= 0) {
+              throw new BusinessException(ErrorCode.PARAMS_ERROR, "要删除用户的id错误");
+          }
+  
+          boolean result = userService.removeById(id);
+          return ResultUtils.success(result);
+      }
+  
+      /**
+       * 鉴权：是否是管理员
+       *
+       * @param request 请求
+       * @return 是否是管理员
+       */
+      private boolean isAdmin(HttpServletRequest request) {
+          Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
+          User currentUser = (User) userObj;
+          return currentUser != null && currentUser.getUserRole() == ADMIN_ROLE;
+      }
+  }
+  
+  ```
+
+  
+
+
+
+## 前端优化：用户模块
+
+- 计划
+
+  适配后端 model api
+
+  请求拦截器 响应拦截器
+
+
+
+---
+
+- 可以一点一点改 但没必要
+
+  src/pages/User/Register/index.tsx
+
+  ```typescript
+      try {
+        // 注册
+        const res = await register(values);
+        if (res.code === 200 && res.data > 0) {
+          const defaultRegisterSuccessMessage = '注册成功！';
+          message.success(defaultRegisterSuccessMessage);
+  
+          const urlParams = new URL(window.location.href).searchParams;
+          history.push(urlParams.get('redirect') || '/user/login');
+          return;
+        } else {
+          throw new Error(res.description)
+        }
+      } catch (error: any) {
+        const defaultLoginFailureMessage = '注册失败，请重试！';
+        console.log(error);
+        message.error(error.message || defaultLoginFailureMessage);
+      }
+    };
+  ```
+
+- 适配requests 请求拦截器 响应拦截器
+
+  src/.umi/plugin-request/request.ts
+
+  ```typescript
+  config.responseInterceptors = [
+    async function (response: Response, options: RequestOptionsInit): Response | Promise<Response> {
+      const data = await response.clone().json();
+      console.log("全局响应拦截器", data)
+    }
+  ]
+  
+  
+    config.responseInterceptors = [
+      async function (response: Response, options: RequestOptionsInit): Response | Promise<Response> {
+        const res = await response;
+        if (res.code === 0) {
+          console.log("全局响应拦截器", res.data)
+        }
+      }
+    ]
+  
+  ```
+
+  
+
+
+
+### model api
+
+- src/services/ant-design-pro/typings.d.ts
+
+  ```typescript
+  declare namespace API {
+    // 通用返回类
+    type BaseResponse<T> = {
+      code: number;
+      data: T;
+      message: string;
+      description: string;
+    };
+  
+  ```
+
+- src/services/ant-design-pro/api.ts
+
+  ```typescript
+  // @ts-ignore
+  /* eslint-disable */
+  // import {request} from '@umijs/max';
+  import request from '@/plugins/globalRequest';
+  
+  /** 注册接口 POST /api/user/register */
+  export async function register(body: API.RegisterParams, options?: { [key: string]: any }) {
+    return request<API.BaseResponse<API.RegisterResult>>('/api/user/register', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      data: body,
+      ...(options || {}),
+    });
+  }
+  
+  /** 登录接口 POST /api/user/login */
+  export async function login(body: API.LoginParams, options?: { [key: string]: any }) {
+    return request<API.BaseResponse<API.LoginResult>>('/api/user/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      data: body,
+      ...(options || {}),
+    });
+  }
+  
+  /** 退出登录接口 POST /api/user/logout */
+  export async function outLogin(options?: { [key: string]: any }) {
+    return request<API.BaseResponse<number>>('/api/user/logout', {
+      method: 'POST',
+      ...(options || {}),
+    });
+  }
+  
+  /** 获取当前的用户 GET /api/user/current */
+  export async function currentUser(options?: { [key: string]: any }) {
+    return request<API.BaseResponse<API.CurrentUser>>('/api/user/current', {
+      method: 'GET',
+      ...(options || {}),
+    });
+  }
+  
+  /** 搜索用户接口 GET /api/user/search */
+  export async function searchUsers(options?: { [key: string]: any }) {
+    return request<API.BaseResponse<API.CurrentUser[]>>('/api/user/search', {
+      method: 'GET',
+      ...(options || {}),
+    });
+  }
+  
+  ```
+  
+  
+
+
+
+### page
+
+- src/pages/User/Register/index.tsx
+
+  nothing
 
 
 
 
 
-### 常量类 (constrant)
+### interceptors
 
+- src/plugins/globalRequest.ts
 
-
-
-
-### 自定义异常
-
-
-
-
-
-
-
-
-
-
+  对接口的*通用响应*进行统一处理，从response中取出data、根据code集中处理错误 (用户未登陆 没权限)
+  
+  不用在每个接口请求中写相同的逻辑 (axios request)
+  
+  ```typescript
+  /**
+   * request 网络请求工具
+   * 更详细的 api 文档: https://github.com/umijs/umi-request
+   */
+  import {extend} from 'umi-request';
+  import {message} from "antd";
+  import {history} from "@@/core/history";
+  import {stringify} from "querystring";
+  
+  /**
+   * 配置request请求时的默认参数
+   */
+  const request = extend({
+    credentials: 'include', // 默认请求是否带上cookie
+    prefix: process.env.NODE_ENV === 'production' ? 'http://user-backend.code-nav.cn' : undefined
+    // requestType: 'form',
+  });
+  
+  /**
+   * 所以请求拦截器
+   */
+  request.interceptors.request.use((url, options): any => {
+    console.log(`do request url = ${url}`)
+  
+    return {
+      url,
+      options: {
+        ...options,
+        headers: {},
+      },
+    };
+  });
+  
+  /**
+   * 所有响应拦截器
+   */
+  request.interceptors.response.use(async (response, options): Promise<any> => {
+    const res = await response.clone().json();
+    if (res.code === 0) {
+      return res.data;
+    }
+    if (res.code === 40100) {
+      message.error('请先登录');
+      history.replace({
+        pathname: '/user/login',
+        search: stringify({
+          redirect: location.pathname,
+        }),
+      });
+    // } else if (res.code === 40000) {
+    //   message.error("请求参数错误")
+    //   return;
+    } else {
+      message.error(res.description)
+      // return;
+    }
+    return res.data;
+  });
+  
+  export default request;
+  
+  ```
+  
+  
 
 
 

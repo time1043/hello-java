@@ -61,7 +61,7 @@ const Register: React.FC = () => {
 
     try {
       // 注册
-      const id = await register(values);
+      const id: any = await register(values);  // 全局响应拦截器
       if (id > 0) {
         const defaultRegisterSuccessMessage = '注册成功！';
         message.success(defaultRegisterSuccessMessage);

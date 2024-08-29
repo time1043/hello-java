@@ -1,6 +1,10 @@
 package com.time1043.usercenterbackend.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.time1043.usercenterbackend.common.BaseResponse;
+import com.time1043.usercenterbackend.common.ErrorCode;
+import com.time1043.usercenterbackend.common.ResultUtils;
+import com.time1043.usercenterbackend.exception.BusinessException;
 import com.time1043.usercenterbackend.model.domain.User;
 import com.time1043.usercenterbackend.model.domain.request.UserLoginRequest;
 import com.time1043.usercenterbackend.model.domain.request.UserRegisterRequest;
@@ -10,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -30,9 +33,10 @@ public class UserController {
     private UserService userService;
 
     @PostMapping("/register")
-    public Long userRegister(@RequestBody UserRegisterRequest userRegisterRequest) {
+    public BaseResponse<Long> userRegister(@RequestBody UserRegisterRequest userRegisterRequest) {
         if (userRegisterRequest == null) {
-            return null;
+            // return ResultUtils.error(ErrorCode.PARAMS_ERROR);  // way1: ugly (通用返回对象 + 自定义错误码)
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "请求参数错误");  // way2: better (+ 封装异常类)
         }
 
         // plugin: auto filling java call arguments
@@ -43,59 +47,65 @@ public class UserController {
 
         // 粗略校验 (controller层对请求参数的校验 没有涉及业务逻辑)
         if (StringUtils.isAnyBlank(userAccount, userPassword, checkPassword, planetCode)) {
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "账户、密码、确认密码、星球编号不能为空");
         }
-        return userService.userRegister(userAccount, userPassword, checkPassword, planetCode);
+        long result = userService.userRegister(userAccount, userPassword, checkPassword, planetCode);  // user id
+
+        // return new BaseResponse<>(0, result, "ok");  // way1: ugly (通用返回对象)
+        return ResultUtils.success(result);  // way2: better (+ 返回对象工具类)
     }
 
     @PostMapping("/login")
-    public User userLogin(
+    public BaseResponse<User> userLogin(
             @RequestBody UserLoginRequest userLoginRequest,
             HttpServletRequest request
     ) {
         if (userLoginRequest == null) {
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "请求参数错误");
         }
 
         String userAccount = userLoginRequest.getUserAccount();
         String userPassword = userLoginRequest.getUserPassword();
 
         if (StringUtils.isAnyBlank(userAccount, userPassword)) {
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户名或密码不能为空");
         }
-        return userService.userLogin(userAccount, userPassword, request);
+        User user = userService.userLogin(userAccount, userPassword, request);
+        return ResultUtils.success(user);
     }
 
     @PostMapping("/logout")
-    public int userLogout(HttpServletRequest request) {
+    public BaseResponse<Integer> userLogout(HttpServletRequest request) {
         if (request == null) {
-            return 0;  // 0表示注销失败
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "请求参数错误");
         }
 
-        return userService.userLogout(request);  // 1表示注销成功
+        int result = userService.userLogout(request);
+        return ResultUtils.success(result);
     }
 
     @GetMapping("/current")
-    public User getCurrentUser(HttpServletRequest request) {
+    public BaseResponse<User> getCurrentUser(HttpServletRequest request) {
         // 从请求中拿到登录态 cookie
         Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
         User currentUser = (User) userObj;
         if (currentUser == null) {
-            return null;
+            throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, "用户未登录");
         }
 
         // 数据库查询 (如果有积分信息)
         Long userId = currentUser.getId();
         User user = userService.getById(userId);
         // TODO 用户状态可能处于封号状态
-        return userService.getSafetyUser(user);  // 脱敏
+        User safetyUser = userService.getSafetyUser(user);
+        return ResultUtils.success(safetyUser);
     }
 
     @GetMapping("/search")
-    public List<User> searchUser(String username, HttpServletRequest request) {
+    public BaseResponse<List<User>> searchUser(String username, HttpServletRequest request) {
         // 非管理员禁止搜索
         if (!isAdmin(request)) {
-            return new ArrayList<>();
+            throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "非管理员禁止搜索");
         }
 
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
@@ -103,22 +113,24 @@ public class UserController {
             queryWrapper.like("username", username);
         }
         List<User> userList = userService.list(queryWrapper);
-        return userList.stream().map(
+        List<User> safetyUserList = userList.stream().map(
                 user -> userService.getSafetyUser(user)
-        ).collect(Collectors.toList());  // 脱敏
+        ).collect(Collectors.toList());
+        return ResultUtils.success(safetyUserList);
     }
 
     @PostMapping("/delete")
-    public boolean deleteUser(@RequestBody long id, HttpServletRequest request) {
+    public BaseResponse<Boolean> deleteUser(@RequestBody long id, HttpServletRequest request) {
         // 非管理员禁止删除
         if (!isAdmin(request)) {
-            return false;
+            throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "非管理员禁止删除");
         }
         if (id <= 0) {
-            return false;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "要删除用户的id错误");
         }
 
-        return userService.removeById(id);  // mybatis-plus BaseMapper
+        boolean result = userService.removeById(id);
+        return ResultUtils.success(result);
     }
 
     /**
