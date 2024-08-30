@@ -6,7 +6,7 @@ import {SettingDrawer} from '@ant-design/pro-components';
 import {history, Link, RunTimeLayoutConfig} from '@umijs/max';
 import defaultSettings from '../config/defaultSettings';
 import {RequestConfig} from '@@/plugin-request/request';
-import {PageLoading} from "@ant-design/pro-layout/lib";
+// import {PageLoading} from "@ant-design/pro-layout/lib";
 
 const isDev = process.env.NODE_ENV === 'development';
 const loginPath = '/user/login';
@@ -44,6 +44,7 @@ export async function getInitialState(): Promise<{
   // 如果是无需登录页面，不执行，不需要获取用户当前信息
   if (NO_NEED_LOGIN_WHITE_LIST.includes(history.location.pathname)) {
     return {
+      // @ts-ignore
       fetchUserInfo,
       settings: defaultSettings as Partial<LayoutSettings>,
     }
@@ -51,7 +52,9 @@ export async function getInitialState(): Promise<{
   // 如果是需要登录页面，执行，拿到用户信息
   const currentUser = await fetchUserInfo();
   return {
+    // @ts-ignore
     fetchUserInfo,
+    // @ts-ignore
     currentUser,
     settings: defaultSettings as Partial<LayoutSettings>,
   };

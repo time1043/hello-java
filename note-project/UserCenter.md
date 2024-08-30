@@ -51,8 +51,14 @@
   [umi docs](https://umijs.org/docs/guides/getting-started), 
   
   [mybatisplus docs](https://baomidou.com/pages/226c21/), 
+  
+- Reference blog
 
+  [多环境设计](https://blog.csdn.net/weixin_41701290/article/details/120173283)
 
+  [如何部署网站？来比比谁的方法多](https://www.bilibili.com/read/cv16179200/)
+
+  
 
 
 
@@ -3910,21 +3916,315 @@
 
 ## 项目部署
 
+- 多环境
+
+  本地环境 localhost、开发环境 192.168.45.110、测试环境 192.168.45.112 (单元测试 性能测试 功能测试 系统集成测试)
+
+  沙箱环境 (实验测试 用完即销毁)
+
+  预发布环境 47.120.120.120 (内测体验)、生产环境 47.122.122.122 (性能更高) ~ *同一个数据库*
+
+- 好处
+
+  每个环境互不影响
+
+  区分不同的阶段 (开发 测试 生产)
+
+  对项目进行优化 (精确依赖 本地日志级别 项目环境jvm参数)
+
+- 实现
+
+  抽象配置类
+
+  配置文件化
+
+  诸如环境参数
+
+  
+
+
+
+### 前端多环境配置
+
+- 前端 请求地址 
+
+  umi框架build时会自动传入`NODE_ENV=production`
+
+  ```js
+  startFront(env) {
+      if(env === "prod") {
+          // 不输出注释
+          // 项目优化
+          // 修改请求地址
+      } else {
+          // 保持本地开发逻辑
+      }
+  }
+  ```
+
+  src/app.tsx
+
+  ```tsx
+  const isDev = process.env.NODE_ENV === 'development';
+  
+  ```
+
+  src/plugins/globalRequest.ts
+
+  ```typescript
+  /**
+   * 配置request请求时的默认参数
+   */
+  const request = extend({
+    credentials: 'include', // 默认请求是否带上cookie
+    prefix: process.env.NODE_ENV === 'production' ? 'http://user-backend.code-nav.cn' : undefined
+    // requestType: 'form',
+  });
+  ```
+
+  启动命令
+
+  ```bash
+  npm run start  # 本地启动 监听端口 自动更新
+  npm run build  # 项目构建打包
+  
+  npm i -g serve
+  cd dist/ && serve
+  
+  ```
+
+- 配置文件 (umi的config)
+
+  公共配置：config.ts
+
+  开发环境：config.dev.ts
+
+  生产环境：config.prod.ts
+
+- 静态化构建
+
+  config/config.ts https://umijs.org/docs/api/config#exportstatic
+
+  ```typescript
+  export default defineConfig({
+    exportStatic: {}
+  });
+  ```
+
+  
+
+
+
+### 后端多环境配置
+
+- 依赖 scope
+
+  ```xml
+              <plugin>
+                  <groupId>org.springframework.boot</groupId>
+                  <artifactId>spring-boot-maven-plugin</artifactId>
+                  <version>${spring-boot.version}</version>
+                  <configuration>
+                      <mainClass>com.time1043.usercenterbackend.UserCenterBackendApplication</mainClass>
+                      <!--<skip>true</skip>-->
+                  </configuration>
+                  <executions>
+                      <execution>
+                          <id>repackage</id>
+                          <goals>
+                              <goal>repackage</goal>
+                          </goals>
+                      </execution>
+                  </executions>
+              </plugin>
+  
+  ```
+
+- 配置文件
+
+  src/main/resources/application.yml
+
+  ```yml
+  spring:
+    application:
+      name: user-center-backend
+    # Database configuration
+    datasource:
+      driver-class-name: com.mysql.jdbc.Driver  # com.mysql.cj.jdbc.Driver
+      url: jdbc:mysql://localhost:3306/user_center
+      username: root
+      password: 123456
+    session:
+      timeout: 86400 # 1天的session过期时间
+  server:
+    port: 8080
+    servlet:
+      context-path: /api # 指定接口全局api前缀
+  
+  mybatis-plus:
+    configuration:
+      map-underscore-to-camel-case: false  # 字段转换
+    global-config:
+      db-config:
+        logic-delete-field: isDelete # 全局逻辑删除的实体字段名(since 3.3.0,配置后可以忽略不配置步骤2)
+        logic-delete-value: 1 # 逻辑已删除值(默认为 1)
+        logic-not-delete-value: 0 # 逻辑未删除值(默认为 0)
+  
+  ```
+
+  src/main/resources/application-prod.yml
+
+  依赖环境地址：数据库地址、缓存地址、消息队列地址、项目端口号
+
+  服务器配置：jvm参数
+
+  ```yml
+  spring:
+    application:
+      name: user-center-backend
+    # Database configuration
+    datasource:
+      driver-class-name: com.mysql.jdbc.Driver  # com.mysql.cj.jdbc.Driver
+      url: jdbc:mysql://175.178.125.185:3306/user_center
+      username: root
+      password: 123456
+    session:
+      timeout: 86400 # 1天的session过期时间
+  server:
+    port: 8080
+    servlet:
+      context-path: /api # 指定接口全局api前缀
+      
+  ```
+
+- 打包
+
+  ```bash
+  cd target/
+  java -jar ./user-center-backend-0.0.1-SNAPSHOT.jar --spring.profiles.active=prod
+  
+  # 前端联调
+  
+  ```
+  
+  
+
+
+
+### 原始部署 way1
+
+- 什么都自己装
+
+  web服务器：[nginx](https://nginx.org/)(前端)、apache、tomcat
+
+- nginx
+
+  ```bash
+  # #################################################
+  # 软件包管理器 yum apt
+  # #################################################
+  sudo apt update
+  sudo apt install nginx
+  systemctl status nginx
+  
+  sudo ufw allow 'Nginx HTTP'
+  sudo ufw allow 'Nginx HTTPS'
+  
+  nginx -v
+  sudo nginx -t  # 检查 配置文件
+  
+  sudo nginx  # 启动
+  sudo nginx -s stop  # 停止服务
+  sudo nginx -s reload  # 重新加载配置文件
+  
+  
+  # 主配置文件：/etc/nginx/nginx.conf
+  # 站点配置文件目录：/etc/nginx/sites-available 和 /etc/nginx/sites-enabled
+  
+  
+  # #################################################
+  # 官网下载 (编译过 源码包)
+  # #################################################
+  sudo apt-get install g++
+  sudo apt-get install openssl libssl-dev
+  sudo apt-get install libpcre3 libpcre3-dev
+  sudo apt-get install zlib1g-dev
+  sudo apt-get install libgd-dev
+  
+  wget https://nginx.org/download/nginx-1.26.2.tar.gz
+  curl -o nginx-1.26.2.tar.gz https://nginx.org/download/nginx-1.26.2.tar.gz
+  
+  tar -zxvf nginx-1.26.2.tar.gz -C /opt/module/
+  cd /opt/module && mv nginx-1.26.2/ nginx
+  
+  ./configure
+  ./configure --with-http_ssl_module --with-http_v2_module --with-stream
+  make  # 编译
+  make install  # sudo
+  
+  cd /usr/local/nginx/sbin/  # nginx
+  vim ~/.bashrc
+  # nginx
+  export NGINX_HOME=/usr/local/nginx
+  export PATH=$PATH:$NGINX_HOME/sbin
+  source ~/.bashrc
+  
+  nginx
+  netstat -ntlp
+  
+  ```
+
+  nginx配置文件
+
+  ```bash
+  cd /opt/code/java-code/hello-java/code-show-project/user-center/user-center-frontend/
+  scp -r dist/ ubuntu@175.178.125.185:/opt/code
+  
+  mv /opt/code/dist/ /opt/code/user-center-frontend
+  cd /usr/local/nginx/conf/
+  cp nginx.conf nginx.default.conf
+  vim nginx.conf
+  
+  cd /opt/module/nginx/conf
+  cp nginx.conf nginx.default.conf 
+  vim nginx.conf
+  
+  nginx -s reload
+  
+  ```
+  
+  nginx.conf
+  
+  ```conf
+   43         location / {
+   44             root   /opt/code/user-center-frontend;
+   45             index  index.html index.htm;
+   46         }
+  ```
+  
+  
+
+
+
+### 宝塔部署 way2
 
 
 
 
 
+### 容器部署 way3
 
 
 
 
 
+### 容器平台 way4
 
 
 
 
 
+### 前后端联调
 
 
 

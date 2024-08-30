@@ -60,7 +60,8 @@ const LoginMessage: React.FC<{
   );
 };
 const Login: React.FC = () => {
-  const [userLoginState, setUserLoginState] = useState<API.LoginResult>({});
+  // const [userLoginState, setUserLoginState] = useState<API.LoginResult>({});
+  const [userLoginState] = useState<API.LoginResult>({});
   const [type, setType] = useState<string>('account');
   const {initialState, setInitialState} = useModel('@@initialState');
   const {styles} = useStyles();
@@ -87,9 +88,9 @@ const Login: React.FC = () => {
         history.push(urlParams.get('redirect') || '/');
         return;
       }
-      // 如果失败去设置用户错误信息
-      console.log(user);
-      setUserLoginState(user);
+      // // 如果失败去设置用户错误信息
+      // console.log(user);
+      // setUserLoginState(user);
     } catch (error) {
       const defaultLoginFailureMessage = '登录失败，请重试！';
       console.log(error);
