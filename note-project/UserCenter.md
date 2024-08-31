@@ -4117,7 +4117,7 @@
 
   web服务器：[nginx](https://nginx.org/)(前端)、apache、tomcat
 
-- nginx
+- 前端nginx
 
   ```bash
   # #################################################
@@ -4171,11 +4171,12 @@
   
   nginx
   netstat -ntlp
+  ps -ef | grep "nginx"
   
   ```
-
-  nginx配置文件
-
+  
+  配置文件nginx
+  
   ```bash
   cd /opt/code/java-code/hello-java/code-show-project/user-center/user-center-frontend/
   scp -r dist/ ubuntu@175.178.125.185:/opt/code
@@ -4190,31 +4191,142 @@
   vim nginx.conf
   
   nginx -s reload
+  # 175.178.125.185
   
   ```
   
   nginx.conf
   
-  ```conf
+  ```
+   1  user root
+   
+   
    43         location / {
    44             root   /opt/code/user-center-frontend;
    45             index  index.html index.htm;
    46         }
+   
+   
+   48         # 代理配置
+   49         location /api {
+   50             # 重写 URL 去除前缀
+   51             # rewrite ^/api(.*) $1 break;
+   52 
+   53             proxy_pass http://175.178.125.185:8080/;
+   54             proxy_set_header Host $host;
+   55             proxy_set_header X-Real-IP $remote_addr;
+   56             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+   57             proxy_set_header X-Forwarded-Proto $scheme;
+   58         }
+   
   ```
   
+- 后端
+
+  ```bash
+  # jdk maven
+  # git clone user-center-backend
+  
+  cd user-center-backend
+  mvn package -DskipTests
+  
+  chmod +x user-center-backend-0.0.1-SNAPSHOT.jar
+  nohup java -jar user-center-backend-0.0.1-SNAPSHOT.jar --spring.profiles.active=prod --server.port=8080 &
+  
+  jobs
+  netstat -nltp
+  jps
+  
+  ```
+  
+- 跨域问题
+
+  ```bash
+  
+  ```
+
   
 
 
 
 ### 宝塔部署 way2
 
+- 宝塔linux (可重选系统)
 
+  https://www.bt.cn/new/download.html
+  
+  ```bash
+  wget -O install.sh https://download.bt.cn/install/install_lts.sh && sudo bash install.sh ed8484bec
+  # https://175.178.125.185:14838/f17ddc92
+  # username password
+  
+  
+  ==================================================================
+  Congratulations! Installed successfully!
+  =============注意：首次打开面板浏览器将提示不安全=================
+  
+   请选择以下其中一种方式解决不安全提醒
+   1、下载证书，地址：https://dg2.bt.cn/ssl/baota_root.pfx，双击安装,密码【www.bt.cn】
+   2、点击【高级】-【继续访问】或【接受风险并继续】访问
+   教程：https://www.bt.cn/bbs/thread-117246-1-1.html
+   mac用户请下载使用此证书：https://dg2.bt.cn/ssl/mac.crt
+  
+  ========================面板账户登录信息==========================
+  
+   【云服务器】请在安全组放行 14838 端口
+   外网面板地址: https://175.178.125.185:14838/f17ddc92
+   内网面板地址: https://10.1.20.6:14838/f17ddc92
+   username: ilxkcu06
+   password: c0d6e8ec
+  
+   浏览器访问以下链接，添加宝塔客服
+   https://www.bt.cn/new/wechat_customer
+  ==================================================================
+  Time consumed: 2 Minute!
+  
+  ```
+  
+  
 
 
 
 ### 容器部署 way3
 
+- docker安装
 
+  ```bash
+  # 宝塔安装docker
+  
+  ```
+
+- 封装镜像
+
+  ```bash
+  touch Dockerfile
+  
+  docker build -it 
+  
+  ```
+
+  Dockerfile
+
+  ```bash
+  FROM maven:3.5-jdk-8-alpine as builder
+  
+  # Copy local code to the container image.
+  WORKDIR /app
+  COPY pom.xml .
+  COPY src ./src
+  
+  # Build a release artifact.
+  RUN mvn package -DskipTests
+  
+  # Run the web service on container startup.
+  CMD ["java","-jar","/app/target/user-center-backend-0.0.1-SNAPSHOT.jar","--spring.profiles.active=prod"]
+  
+  ```
+
+  
 
 
 
@@ -4224,7 +4336,7 @@
 
 
 
-### 前后端联调
+### 前后端联调 (跨域问题)
 
 
 
