@@ -4304,13 +4304,20 @@
   ```bash
   touch Dockerfile
   
-  docker build -it 
+  cd /opt/code/user-center-backend
+  docker build -t user-center-backend:v0.0.1 .
+  
+  
+  # #################################################
+  # log
+  # #################################################
+  
   
   ```
 
-  Dockerfile
+  Dockerfile (在容器中构建)
 
-  ```bash
+  ```dockerfile
   FROM maven:3.5-jdk-8-alpine as builder
   
   # Copy local code to the container image.
@@ -4323,6 +4330,35 @@
   
   # Run the web service on container startup.
   CMD ["java","-jar","/app/target/user-center-backend-0.0.1-SNAPSHOT.jar","--spring.profiles.active=prod"]
+  
+  ```
+
+  Dockerfile (上传jar到容器中)
+
+  ```dockerfile
+  
+  ```
+
+  Dockerfile
+
+  ```dockerfile
+  FROM nginx
+  
+  WORKDIR /usr/share/nginx/html/
+  USER root
+  
+  COPY ./docker/nginx.conf /etc/nginx/conf.d/default.conf
+  COPY ./dist  /usr/share/nginx/html/
+  
+  EXPOSE 80
+  
+  CMD ["nginx", "-g", "daemon off;"]
+  
+  ```
+
+  docker/nginx.conf
+
+  ```conf
   
   ```
 
