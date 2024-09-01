@@ -4302,10 +4302,11 @@
 - 封装镜像
 
   ```bash
-  touch Dockerfile
-  
   cd /opt/code/user-center-backend
   docker build -t user-center-backend:v0.0.1 .
+  
+  cd /opt/code/user-center-frontend
+  docker build -t user-center-frontend:v0.0.1 .
   
   
   # #################################################
@@ -4336,6 +4337,14 @@
   Dockerfile (上传jar到容器中)
 
   ```dockerfile
+  FROM openjdk:8-jdk-alpine
+  
+  # Copy local code to the container image.
+  WORKDIR /app
+  COPY target/user-center-backend-0.0.1-SNAPSHOT.jar ./target
+  
+  # Run the web service on container startup.
+  CMD ["java","-jar","/app/target/user-center-backend-0.0.1-SNAPSHOT.jar","--spring.profiles.active=prod"]
   
   ```
 
@@ -4351,7 +4360,6 @@
   COPY ./dist  /usr/share/nginx/html/
   
   EXPOSE 80
-  
   CMD ["nginx", "-g", "daemon off;"]
   
   ```
@@ -4359,8 +4367,28 @@
   docker/nginx.conf
 
   ```conf
+  server {
+      listen 80;
   
+      # gzip config
+      gzip on;
+      gzip_min_length 1k;
+      gzip_comp_level 9;
+      gzip_types text/plain text/css text/javascript application/json application/javascript application/x-javascript application/xml;
+      gzip_vary on;
+      gzip_disable "MSIE [1-6]\.";
+  
+      root /usr/share/nginx/html;
+      include /etc/nginx/mime.types;
+  
+      location / {
+          try_files $uri /index.html;
+      }
+  
+  }
   ```
+
+  Docker构建优化：减小尺寸、减少时间 (多阶段构建)
 
   
 
