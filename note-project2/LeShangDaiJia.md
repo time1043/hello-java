@@ -1,6 +1,6 @@
 # LeShangDaiJia
 
-p2 9:00
+p7 1:06
 
 ## 背景介绍
 
@@ -168,12 +168,48 @@ p2 9:00
 
 - 环境准备
 
-  注册微信开发者账号、开通服务和插件 (地图)
+  注册微信开发者账号、appid和app密钥、开通服务和插件 (地图)
 
-  Nodejs、微信开发者工具 https://github.com/msojocs/wechat-web-devtools-linux
+  Nodejs、微信开发者工具 (导入前端项目)
+
+  https://github.com/msojocs/wechat-web-devtools-linux
+
+  https://www.58jb.com/html/use-wechat-on-ubuntu.html
+
+  ```bash
+  # wine
+  sudo apt-get install wine -y
+  
+  cd /opt/devide
+  git clone https://github.com/cytle/wechat_web_devtools.git
+  cd wechat_web_devtools
+  ./bin/wxdt install  # 自动下载最新 `nw.js` , 同时部署目录 `~/.config/wechat_web_devtools/`
+  ./bin/wxdt  # 启动开发者工具
+  
+  sudo vim /usr/share/applications/WechatDevtools.desktop
+  
+  
+  # 在安装过程中，我遇到错误提示了，解决方法就是把以下两个目录删除，再执行一次安装
+  sudo rm -rf dist/           #它在wechat_web_devtools目录下安装时会自动生成
+  sudo rm -rf /tmp/wxdt_xsp/
+  
+  # 给目录授权
+  sudo chmod -R 777 ~/.config/wechat_web_devtools/
+  
+  ```
+
+  WechatDevtools.desktop
 
   ```
-  
+  [Desktop Entry]
+  Type=Application
+  Name=微信开发者工具
+  Icon=/opt/devide/wechat_web_devtools/images/logo_miniprogram.png
+  GenericName=WechatDevtools
+  Comment=WechatDevtools
+  Exec="/opt/devide/wechat_web_devtools/bin/wxdt" -desktop
+  Terminal=false
+  Categories=Wechat;tencent;
   ```
 
   

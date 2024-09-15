@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: yupao-backend
+  # Database configuration
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver  # com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://175.178.125.185:3306/user_center
+    username: root
+    password: 123456
+  session:
+    timeout: 86400 # 1天的session过期时间
+server:
+  port: 8080
+  servlet:
+    context-path: /api # 指定接口全局api前缀

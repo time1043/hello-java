@@ -13,15 +13,19 @@
 
 
 
-## IDE ✔
-
-### idea
+## IDEA ✔
 
 
 
 
 
-### vscode
+## vscode ✔
+
+
+
+
+
+## tomcat
 
 
 
@@ -29,6 +33,99 @@
 
 ## maven ✔
 
+- 依赖管理工具和项目构建工具
+
+  maven：写配置文件
+
+  gradle：写程序
+
+  
+
+
+
+### 背景介绍
+
+- 依赖管理工具
+
+  以前：手动依赖第三方jar、手动处理依赖关系
+
+  现在：中央远程仓库、本地仓库
+
+- 项目构建工具
+
+  以前：原始构建、原始编译
+
+  现在：批量编译、组织文件结构 (代码编译 测试 打包 安装 部署)
+
+  
+
+
+
+---
+
+- 构建企业私服
+
+  Nexus
+
+  
+
+
+
+### 环境配置
+
+- 版本选择
+
+  maven3.8.8, JDK17, IDEA2022
+
+- 项目结构
+
+  ```bash
+  oswin@dt501:/opt/code/java-code/hello-java/code-show/HelloMaven$ tree -L 6
+  .
+  ├── pom.xml								# maven 依赖配置文件
+  ├── src
+  │   ├── main
+  │   │   ├── java							# java业务代码
+  │   │   │   └── com
+  │   │   │       └── time1043
+  │   │   │           └── Main.java
+  │   │   └── resources						# 静态资源 配置文件
+  │   └── test
+  │       └── java							# java业务代码 测试类
+  │
+  └── target									# java业务代码 编译后
+      ├── classes
+      │   └── com
+      │       └── time1043
+      │           └── Main.class
+      └── generated-sources
+          └── annotations
+  
+  ```
+
+  HelloMaven/pom.xml
+
+  ```xml
+  <?xml version="1.0" encoding="UTF-8"?>
+  <project xmlns="http://maven.apache.org/POM/4.0.0"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+      <modelVersion>4.0.0</modelVersion>
+  
+      <groupId>com.time1043</groupId>
+      <artifactId>HelloMaven</artifactId>
+      <version>1.0-SNAPSHOT</version>
+  
+      <properties>
+          <maven.compiler.source>8</maven.compiler.source>
+          <maven.compiler.target>8</maven.compiler.target>
+          <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+      </properties>
+  
+  </project>
+  ```
+
+  
 
 
 
@@ -36,6 +133,31 @@
 
 
 
+
+
+
+
+## Gradle ✔
+
+- build.gradle
+
+  ```
+  repositories {
+  
+      maven { url 'https://maven.aliyun.com/repository/public/' }
+      maven { url 'https://maven.aliyun.com/repository/spring/' }
+  
+      mavenLocal()
+      mavenCentral()
+  
+  }
+  ```
+
+  
+
+
+
+## lombok
 
 
 
@@ -44,6 +166,8 @@
 
 
 ## jdbc (x)
+
+
 
 
 
