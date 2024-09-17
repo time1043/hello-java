@@ -58,6 +58,8 @@
 
   [如何部署网站？来比比谁的方法多](https://www.bilibili.com/read/cv16179200/)
 
+  [Java开发手册 pdf](https://github.com/alibaba/p3c/blob/master/Java%E5%BC%80%E5%8F%91%E6%89%8B%E5%86%8C(%E9%BB%84%E5%B1%B1%E7%89%88).pdf), [Java开发手册](https://alibaba.github.io/p3c/), [Java全栈知识](https://pdai.tech/md/dev-spec/spec/dev-x-overview.html)
+  
   
 
 
@@ -183,6 +185,10 @@
 
 ### 登陆注册
 
+
+
+
+
 ### 用户管理
 
 
@@ -201,7 +207,7 @@
 
 
 
-### 用户
+### model 用户
 
 - user
 
@@ -3000,6 +3006,26 @@
   }
   
   ```
+
+  
+
+
+
+### POJO
+
+- POJO (Plain Old Java Object)
+
+  PO (Persistent Object)：持久化对象，与*数据库表结构*一一对应
+
+  DO (Domain Object)：领域对象，表示业务领域中的*实体*，包含*业务逻辑和状态*
+
+  DTO (Data Transfer Object)：数据传输对象，用于在不同层之间传输数据，*不包含业务逻辑* 
+
+  VO (View Object)：视图对象，用于表示前端展示的数据，包含*前端页面所需的所有数据*
+
+  BO (Business Object)：业务对象，表示业务逻辑层中的对象，包含*复杂的业务逻辑和状态*
+
+  
 
   
 

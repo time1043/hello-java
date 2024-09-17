@@ -1,9 +1,8 @@
 <template>
-  <!-- 导航条 -->
+  <!-- 导航条 fixed="true" -->
   <van-nav-bar
       title="标题"
-      left-arrow
-      fixed="true"
+      left-arrow fixed="true"
       @click-left="onClickLeft"
       @click-right="onClickRight"
   >
@@ -26,35 +25,55 @@
     </template>
     -->
 
-    <!-- WAY2: 路由 -->
+    <!-- WAY2: Vue Router -->
+    <!-- https://vant-ui.github.io/vant/v3/#/zh-CN/tabbar -->
     <RouterView/>
-
   </div>
 
   <!-- 底部栏 -->
-  <van-tabbar v-model=" active
-    " @change="onChange">
-    <van-tabbar-item icon="home-o" name="index">主页</van-tabbar-item>
-    <van-tabbar-item icon="search" name="team">队伍</van-tabbar-item>
-    <van-tabbar-item icon="friends-o" name="user">个人</van-tabbar-item>
+  <!-- <van-tabbar route v-model="active" @change="onChange">-->
+  <van-tabbar route @change="onChange">
+    <van-tabbar-item icon="home-o" name="index" to="/">主页</van-tabbar-item>
+    <van-tabbar-item icon="search" name="team" to="/team">队伍</van-tabbar-item>
+    <van-tabbar-item icon="friends-o" name="user" to="/user">个人</van-tabbar-item>
   </van-tabbar>
 
 </template>
 
 <script setup lang="ts">
-import {ref} from 'vue';
-import Index from "../pages/Index.vue";
-import Team from "../pages/Team.vue";
+import {useRouter} from "vue-router";
+
+// Vue Router
+const router = useRouter();
 
 // 导航条
-const onClickLeft = () => console.log('点击左侧按钮');
-const onClickRight = () => console.log('点击右侧按钮')
+const onClickLeft = () => {
+  // https://router.vuejs.org/zh/guide/essentials/navigation.html
+  router.push('/');
+}
+const onClickRight = () => {
+  // https://router.vuejs.org/zh/guide/essentials/navigation.html
+  router.push('/search');
+}
 
 // 底部栏
-const active = ref("index");
+// const active = ref("index");
 const onChange = (index) => console.log(index);
 </script>
 
 <style scoped>
+/* 设置导航条和底部栏的高度 */
+.van-nav-bar {
+  height: 46px;
+}
 
+.van-tabbar {
+  height: 50px;
+}
+
+/* 设置 #content 的高度，使其占满剩余空间 */
+#content {
+  height: calc(100vh - 46px - 50px);
+  width: 100%;
+}
 </style>

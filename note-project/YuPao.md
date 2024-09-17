@@ -1,6 +1,6 @@
 # yupao
 
-- Reference
+- Reference dev
 
   [Vant UI](https://vant-ui.github.io/vant/v3/#/zh-CN), 
 
@@ -410,11 +410,11 @@
   ├── src						# 源码
   │   ├── App.vue					# vue入口 vue应用的根组件
   │   ├── assets					# 静态资源 图片字体样式表等
-  │	│
+  │   │
   │   ├── layouts					# 通用布局
   │   ├── pages					# 页面
   │   ├── components				# 组件
-  │	│
+  │   │
   │   ├── main.ts					# 全局ts 初始化vue应用并挂载到DOM上
   │   ├── style.css				# 全局css
   │   └── vite-env.d.ts			# 声明vite的环境变量类型
@@ -535,13 +535,13 @@
   import './style.css'
   import App from './App.vue'
   // import {Button, Icon, NavBar, Tabbar, TabbarItem} from 'vant';
-  import {createMemoryHistory, createRouter} from 'vue-router';
+  import {createRouter, createWebHashHistory} from 'vue-router';
   import routes from "./config/route.ts";
   
   
   // VueRouter
   const router = createRouter({
-      history: createMemoryHistory(),
+      history: createWebHashHistory(),  // createMemoryHistory
       routes,
   })
   
@@ -598,43 +598,47 @@
     <!-- 中间内容：插槽/路由、或根据点击切换页面 -->
     <!-- <slot name="content"></slot>-->
     <div id="content">
+  
+      <!-- WAY1: v-if active -->
+      <!--
       <template v-if="active === 'index'">
         <Index/>
       </template>
       <template v-if="active === 'team'">
         <Team/>
       </template>
+      -->
+  
+      <!-- WAY2: Vue Router -->
+      <!-- https://vant-ui.github.io/vant/v3/#/zh-CN/tabbar -->
+      <RouterView/>
     </div>
   
     <!-- 底部栏 -->
-    <van-tabbar v-model=" active
-      " @change="onChange">
-      <van-tabbar-item icon="home-o" name="index">主页</van-tabbar-item>
-      <van-tabbar-item icon="search" name="team">队伍</van-tabbar-item>
-      <van-tabbar-item icon="friends-o" name="user">个人</van-tabbar-item>
+    <!-- <van-tabbar route v-model="active" @change="onChange">-->
+    <van-tabbar route @change="onChange">
+      <van-tabbar-item icon="home-o" name="index" to="/">主页</van-tabbar-item>
+      <van-tabbar-item icon="search" name="team" to="/team">队伍</van-tabbar-item>
+      <van-tabbar-item icon="friends-o" name="user" to="/user">个人</van-tabbar-item>
     </van-tabbar>
   
   </template>
   
   <script setup lang="ts">
-  import {ref} from 'vue';
-  import {Toast} from 'vant';
-  import 'vant/es/toast/style';
-  import Index from "../pages/Index.vue";
-  import Team from "../pages/Team.vue";
   
   // 导航条
   const onClickLeft = () => console.log('点击左侧按钮');
   const onClickRight = () => console.log('点击右侧按钮')
   
   // 底部栏
-  const active = ref("index");
+  // const active = ref("index");
   const onChange = (index) => console.log(index);
   </script>
   
   <style scoped>
   
   </style>
+  
   ```
 
 - 页面
@@ -671,6 +675,22 @@
   </style>
   ```
 
+  src/pages/User.vue
+
+  ```vue
+  <template>
+    个人页面
+  </template>
+  
+  <script setup lang="ts">
+  
+  </script>
+  
+  <style scoped>
+  
+  </style>
+  ```
+
 - 组件
 
   ...
@@ -688,10 +708,12 @@
   ```typescript
   import Index from "../pages/Index.vue";
   import Team from "../pages/Team.vue";
+  import User from "../pages/User.vue";
   
   const routes = [
       {path: '/', component: Index},
       {path: '/team', component: Team},
+      {path: '/user', component: User},
   ]
   
   export default routes;
@@ -774,10 +796,32 @@
   搜索页
 
   用户页、用户修改页
+  
+  
 
 
 
 ### 页面和布局
+
+
+
+
+
+### 页面：搜索页
+
+- 组件选择
+
+  [Search](https://vant-ui.github.io/vant/v3/#/zh-CN/search), [Picker](https://vant-ui.github.io/vant/v3/#/zh-CN/picker), 
+
+- src/pages/SearchPage.vue
+
+  ```vue
+  
+  ```
+
+  
+
+
 
 ### 组件 X
 
