@@ -28,6 +28,7 @@
 
   <van-divider dashed>选择标签</van-divider>
   <van-tree-select
+      height="380px"
       v-model:active-id="activeIds"
       v-model:main-active-index="activeIndex"
       :items="tagList"
@@ -50,6 +51,7 @@ const originTagList = [
     children: [
       {text: '男', id: '男'},
       {text: '女', id: '女'},
+      {text: 'Javaer', id: 'Javaer'},
       {text: '未知', id: '未知', disabled: true},
     ],
   },
@@ -62,7 +64,11 @@ const originTagList = [
       {text: 'TypeScript', id: 'TypeScript'},
       {text: 'PHP', id: 'PHP'},
       {text: 'C++', id: 'C++'},
+      {text: 'C#', id: 'C#'},
+      {text: 'Go', id: 'Go'},
+      {text: 'Kotlin', id: 'Kotlin'},
       {text: 'Swift', id: 'Swift'},
+      {text: 'Bug', id: 'Bug'},
     ],
   },
 ];
@@ -78,7 +84,11 @@ const onSearch = (val) => {
     const tempChildren = [...parentTag.children];
     const tempParentTag = {...parentTag};
     tempParentTag.children = tempChildren.filter(item => item.text.includes(searchText.value));
-    activeIndex.value = 1;  // TODO
+    console.log(typeof tempParentTag)
+    console.log(tempParentTag)
+
+    // TODO
+    activeIndex.value = 1;
     return tempParentTag;
   });
 }

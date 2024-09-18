@@ -2,7 +2,13 @@
 
 - Reference dev
 
-  [Vant UI](https://vant-ui.github.io/vant/v3/#/zh-CN), 
+  [Vant UI](https://vant-ui.github.io/vant/v3/#/zh-CN), [Swagger](https://swagger.io/), [EasyExcel](https://easyexcel.opensource.alibaba.com/), 
+  
+- Reference blog
+
+  [swagger springboot](https://www.javabetter.cn/gongju/knife4j.html#%E6%95%B4%E5%90%88-knife4j), 
+
+
 
 
 
@@ -508,15 +514,16 @@
 
 
 
-### 精简项目
+### 精简项目 ✔
 
 - 精简项目
 
   ```bash
   rm -rf src/components/HelloWorld.vue 
   mkdir src/layouts && touch src/layouts/BasicLayout.vue
-  mkdir src/pages && touch src/pages/Index.vue src/pages/Team.vue
+  mkdir src/pages && touch src/pages/Index.vue src/pages/Team.vue src/pages/UserEditPage.vue
   mkdir src/config && touch src/config/route.ts
+  mkdir src/models && touch src/models/user.d.ts
   
   ```
   
@@ -570,15 +577,42 @@
   
   ```
 
+- 入口HTML
+
+  index.html
+
+  ```html
+  <!doctype html>
+  <html lang="en">
+    <head>
+      <meta charset="UTF-8" />
+      <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>Vite + Vue + TS</title>
+    </head>
+    <body>
+      <div id="app"></div>
+      <script type="module" src="/src/main.ts"></script>
+    </body>
+  </html>
+  
+  ```
+
+- 全局样式
+
+  src/style.css
+
+  ```css
+  
+  ```
+
   
 
 
 
----
+### 假页面：基础布局 ✔
 
-- 布局
-
-  src/layouts/BasicLayout.vue
+- src/layouts/BasicLayout.vue
 
   ```vue
   <template>
@@ -640,10 +674,14 @@
   </style>
   
   ```
+  
+  
 
-- 页面
 
-  src/pages/Index.vue
+
+### 假页面：首页 搜索页 ✔
+
+- src/pages/Index.vue
 
   ```vue
   <template>
@@ -658,8 +696,133 @@
   
   </style>
   ```
+  
+  src/pages/SearchPage.vue
 
-  src/pages/Team.vue
+  ```vue
+  <template>
+    <!-- 搜索框 -->
+    <!-- https://vant-ui.github.io/vant/v3/#/zh-CN/search -->
+    <form action="/">
+      <van-search
+          v-model="searchText"
+          show-action
+          placeholder="请输入搜索标签"
+          @search="onSearch"
+          @cancel="onCancel"
+      />
+    </form>
+  
+    <!-- 标签列表 -->
+    <!-- https://vant-ui.github.io/vant/v3/#/zh-CN/tag -->
+    <!-- https://vant-ui.github.io/vant/v3/#/zh-CN/divider -->
+    <!-- https://vant-ui.github.io/vant/v3/#/zh-CN/collapse -->
+    <!-- https://vant-ui.github.io/vant/v3/#/zh-CN/tree-select -->
+    <van-divider dashed>已选标签</van-divider>
+    <div v-if="activeIds.length === 0">请选择标签...</div>
+    <van-row gutter="16" style="padding: 0 16px">
+      <van-col v-for="tag in activeIds">
+        <van-tag size="small" type="primary" closeable @close="doClose(tag)">
+          {{ tag }}
+        </van-tag>
+      </van-col>
+    </van-row>
+  
+    <van-divider dashed>选择标签</van-divider>
+    <van-tree-select
+        height="380px"
+        v-model:active-id="activeIds"
+        v-model:main-active-index="activeIndex"
+        :items="tagList"
+    />
+  </template>
+  
+  <script setup lang="ts">
+  import {ref} from 'vue';
+  
+  // 选择标签 分类选择
+  const activeIds = ref([]);
+  const activeIndex = ref(0);
+  
+  /**
+   * 标签列表 封装响应式
+   */
+  const originTagList = [
+    {
+      text: '性别',
+      children: [
+        {text: '男', id: '男'},
+        {text: '女', id: '女'},
+        {text: 'Javaer', id: 'Javaer'},
+        {text: '未知', id: '未知', disabled: true},
+      ],
+    },
+    {
+      text: '语言',
+      children: [
+        {text: 'Java', id: 'Java'},
+        {text: 'Python', id: 'Python'},
+        {text: 'JavaScript', id: 'JavaScript'},
+        {text: 'TypeScript', id: 'TypeScript'},
+        {text: 'PHP', id: 'PHP'},
+        {text: 'C++', id: 'C++'},
+        {text: 'C#', id: 'C#'},
+        {text: 'Go', id: 'Go'},
+        {text: 'Kotlin', id: 'Kotlin'},
+        {text: 'Swift', id: 'Swift'},
+        {text: 'Bug', id: 'Bug'},
+      ],
+    },
+  ];
+  let tagList = ref(originTagList);
+  
+  /**
+   * 搜索过滤
+   * @param val
+   */
+  const onSearch = (val) => {
+    // 抽出标签列表 打平  // 过滤
+    tagList.value = originTagList.map(parentTag => {
+      const tempChildren = [...parentTag.children];
+      const tempParentTag = {...parentTag};
+      tempParentTag.children = tempChildren.filter(item => item.text.includes(searchText.value));
+      console.log(typeof tempParentTag)
+      console.log(tempParentTag)
+  
+      // TODO
+      activeIndex.value = 1;
+      return tempParentTag;
+    });
+  }
+  
+  // 搜索框
+  const searchText = ref('');
+  const onCancel = () => {
+    searchText.value = '';
+    tagList.value = originTagList;
+  }
+  
+  // 标签列表 删除标签
+  const doClose = (tag) => {
+    activeIds.value = activeIds.value.filter(item => {
+      return item !== tag;
+    })
+  }
+  </script>
+  
+  <style scoped>
+  
+  </style>
+  ```
+  
+  
+
+
+
+
+### 假页面：团队页 ✔
+
+- src/pages/Team.vue
 
   ```vue
   <template>
@@ -675,15 +838,58 @@
   </style>
   ```
 
-  src/pages/User.vue
+  1
+
+
+
+
+### 假页面：个人页 修改页 ✔
+
+- src/pages/User.vue
 
   ```vue
   <template>
-    个人页面
+    <!-- https://vant-ui.github.io/vant/v3/#/zh-CN/cell -->
+    <van-cell title="用户头像" is-link to="/user/edit" title-style="text-align:left; display:flex; align-items:center">
+      <van-image :src="user.avatarUrl" fit="cover" width="40" height="40"/>
+    </van-cell>
+    <van-cell title="用户名" is-link to="/user/edit" :value="user.username"
+              title-style="text-align:left; display:flex; align-items:center"/>
+  
+    <van-cell title="用户账号" :value="user.userAccount"
+              title-style="text-align:left; display:flex; align-items:center"/>
+    <van-cell title="用户角色" :value="user.userRole"
+              title-style="text-align:left; display:flex; align-items:center"/>
+  
+    <van-cell title="用户性别" is-link to="/user/edit" :value="user.gender"
+              title-style="text-align:left; display:flex; align-items:center"/>
+    <van-cell title="用户手机号" is-link to="/user/edit" :value="user.phone"
+              title-style="text-align:left; display:flex; align-items:center"/>
+    <van-cell title="用户邮箱" is-link to="/user/edit" :value="user.email"
+              title-style="text-align:left; display:flex; align-items:center"/>
+  
+    <van-cell title="创建时间" :value="user.createTime?.toISOString()" title-style="text-align:left; display:flex; align-items:center"/>
+    <van-cell title="星球代码" :value="user.planetCode" title-style="text-align:left; display:flex; align-items:center"/>
+    <van-cell title="用户标签" is-link to="/user/edit" :value="user.tags"
+              title-style="text-align:left; display:flex; align-items:center"/>
   </template>
   
   <script setup lang="ts">
+  import {UserType} from "../models/user";
   
+  const user: UserType = {
+    id: 1,
+    username: "oswin",
+    userAccount: "oswin501",
+    avatarUrl: "https://miro.medium.com/v2/resize:fit:640/format:webp/1*4j2A9niz0eq-mRaCPUffpg.png",
+    gender: 1,
+    phone: "15534340089",
+    email: "oswin501@gmail.com",
+    createTime: new Date(),
+    userRole: 1,
+    planetCode: "nn00000001",
+    tags: ["java", "cpp"],
+  };
   </script>
   
   <style scoped>
@@ -691,13 +897,9 @@
   </style>
   ```
 
-- 组件
-
-  ...
-
   
 
-
+  
 
 ### 路由配置
 
@@ -707,19 +909,57 @@
   
   ```typescript
   import Index from "../pages/Index.vue";
-  import Team from "../pages/Team.vue";
-  import User from "../pages/User.vue";
+  import TeamPage from "../pages/TeamPage.vue";
+  import UserPage from "../pages/UserPage.vue";
+  import SearchPage from '../pages/SearchPage.vue';
+  import EditUserPage from "../pages/UserEditPage.vue";
   
   const routes = [
+      // page 1
       {path: '/', component: Index},
-      {path: '/team', component: Team},
-      {path: '/user', component: User},
+      {path: '/search', component: SearchPage},
+      // page 2
+      {path: '/team', component: TeamPage},
+      // page 3
+      {path: '/user', component: UserPage},
+      {path: '/user/edit', component: EditUserPage},
   ]
   
   export default routes;
   
   ```
   
+  
+
+
+
+### 类型约束
+
+- 类型约束
+
+  src/models/user.d.ts
+
+  ```typescript
+  /**
+   * 用户类型
+   */
+  export type UserType = {
+      id: number,
+      username?: string,
+      userAccount?: string,
+      avatarUrl?: string,
+      gender?: number,
+      phone?: string,
+      email?: string,
+      userStatus?: number,
+      createTime?: Date,
+      userRole?: number,
+      planetCode?: string,
+      tags?: string[],
+  };
+  
+  ```
+
   
 
 
@@ -766,6 +1006,35 @@
           </dependency>
   ```
 
+  swagger
+  
+  ```xml
+          <!-- swagger -->
+          <!-- https://mvnrepository.com/artifact/io.springfox/springfox-swagger2 -->
+          <dependency>
+              <groupId>io.springfox</groupId>
+              <artifactId>springfox-swagger2</artifactId>
+              <version>3.0.0</version>
+          </dependency>
+          <!-- https://mvnrepository.com/artifact/io.springfox/springfox-swagger-ui -->
+          <dependency>
+              <groupId>io.springfox</groupId>
+              <artifactId>springfox-swagger-ui</artifactId>
+              <version>3.0.0</version>
+          </dependency>
+  ```
+  
+  easyexcel
+  
+  ```xml
+          <!-- https://mvnrepository.com/artifact/com.alibaba/easyexcel -->
+          <dependency>
+              <groupId>com.alibaba</groupId>
+              <artifactId>easyexcel</artifactId>
+              <version>3.1.1</version>
+          </dependency>
+  ```
+  
   
 
 
@@ -784,6 +1053,40 @@
   use yupao;
   
   ```
+
+  
+
+
+
+### 补全学习 ✔
+
+- 补习
+
+  Java8特性：lambda、stream、parallelStream流式处理、Optional可选类
+
+  MyBatisPlus：ORM 免SQL的API
+
+
+
+
+
+### 接口文档 ✔
+
+- 接口文档
+
+  写接口信息的文档 (前端 后端 项目负责人)
+
+  接口信息：请求参数、响应参数(错误码)、接口地址、接口名称、请求类型、请求格式、备注
+
+  文档作用：项目维护参考、开发联调介质、在线调试
+
+  实现方式：md笔记手写、自动化接口文档生成([`Swagger`](https://swagger.io/), `Postman`, `Apifox`, `Apipost`, `Eolink`)
+
+- 整合 Swagger Knife4j
+
+  引入依赖 -> 自定义Swagger配置项 -> 定义代码位置 (线上环境不要把接口全部暴露)
+
+- 隐藏部分接口
 
   
 
@@ -894,6 +1197,38 @@
   [kryo](https://mvnrepository.com/artifact/com.esotericsoftware/kryo): 性能极高的序列化库
 
   [hutool](https://mvnrepository.com/artifact/cn.hutool/hutool-all): 
+
+  
+
+
+
+### 数据导入 ✔
+
+- 存量用户信息导入及同步
+
+- 需求
+
+  所有星球用户信息：接口爬虫 -> 数据清洗 -> 数据导入excel
+
+  自我介绍的标签信息：导入
+
+  
+
+
+
+---
+
+- EssayExcel两种读方式
+
+  确定表头：创建对象，建立映射
+
+  不确定表头：每一行数据映射为Map<String, Object>
+
+- EssayExcel两种读取模式
+
+  监听器：创建监听器、在读取文件时绑定监听器 (单独抽离处理逻辑 代码清晰易于维护；一条条处理 适用于数据量大的场景)
+
+  同步读：无需创建监听器，要获取完整数据 (简单直接；但数据量大 有等待时长 容易卡顿甚至内存溢出)
 
   
 
@@ -1229,20 +1564,6 @@
 
 
 
-
-### 补全学习 ✔
-
-- 补习
-
-  Java8特性：lambda、stream、parallelStream流式处理、Optional可选类
-
-  MyBatisPlus：ORM 免SQL的API
-
-
-
-
-
-### 接口文档 ✔
 
 
 

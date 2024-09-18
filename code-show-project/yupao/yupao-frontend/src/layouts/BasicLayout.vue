@@ -1,8 +1,10 @@
 <template>
   <!-- 导航条 fixed="true" -->
+  <!-- https://vant-ui.github.io/vant/v3/#/zh-CN/nav-bar -->
   <van-nav-bar
       title="标题"
-      left-arrow fixed="true"
+      left-arrow
+      fixed
       @click-left="onClickLeft"
       @click-right="onClickRight"
   >
@@ -26,11 +28,11 @@
     -->
 
     <!-- WAY2: Vue Router -->
-    <!-- https://vant-ui.github.io/vant/v3/#/zh-CN/tabbar -->
     <RouterView/>
   </div>
 
   <!-- 底部栏 -->
+  <!-- https://vant-ui.github.io/vant/v3/#/zh-CN/tabbar -->
   <!-- <van-tabbar route v-model="active" @change="onChange">-->
   <van-tabbar route @change="onChange">
     <van-tabbar-item icon="home-o" name="index" to="/">主页</van-tabbar-item>
@@ -49,7 +51,7 @@ const router = useRouter();
 // 导航条
 const onClickLeft = () => {
   // https://router.vuejs.org/zh/guide/essentials/navigation.html
-  router.push('/');
+  router.back();
 }
 const onClickRight = () => {
   // https://router.vuejs.org/zh/guide/essentials/navigation.html
