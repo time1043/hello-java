@@ -11,32 +11,44 @@
     />
   </form>
 
-  <!-- 标签列表 -->
-  <!-- https://vant-ui.github.io/vant/v3/#/zh-CN/tag -->
-  <!-- https://vant-ui.github.io/vant/v3/#/zh-CN/divider -->
-  <!-- https://vant-ui.github.io/vant/v3/#/zh-CN/collapse -->
-  <!-- https://vant-ui.github.io/vant/v3/#/zh-CN/tree-select -->
-  <van-divider dashed>已选标签</van-divider>
-  <div v-if="activeIds.length === 0">请选择标签...</div>
-  <van-row gutter="16" style="padding: 0 16px">
-    <van-col v-for="tag in activeIds">
-      <van-tag size="small" type="primary" closeable @close="doClose(tag)">
+  <div style="height: calc(100vh - 200px); overflow: auto">
+    <!-- 标签列表 -->
+    <!-- https://vant-ui.github.io/vant/v3/#/zh-CN/tag -->
+    <!-- https://vant-ui.github.io/vant/v3/#/zh-CN/divider -->
+    <!-- https://vant-ui.github.io/vant/v3/#/zh-CN/collapse -->
+    <!-- https://vant-ui.github.io/vant/v3/#/zh-CN/tree-select -->
+    <van-divider dashed>已选标签</van-divider>
+    <div v-if="activeIds.length === 0" style="font-size: 12px; text-align: center">请选择标签...</div>
+    <div style="padding: 0 20px">
+      <van-tag size="small" type="primary"
+               closeable @close="doClose(tag)"
+               v-for="tag in activeIds"
+               style="margin-right: 5px; margin-bottom: 3px; padding: 4px; font-size: 11px;">
         {{ tag }}
       </van-tag>
-    </van-col>
-  </van-row>
+    </div>
 
-  <van-divider dashed>选择标签</van-divider>
-  <van-tree-select
-      height="380px"
-      v-model:active-id="activeIds"
-      v-model:main-active-index="activeIndex"
-      :items="tagList"
-  />
+    <van-divider dashed>选择标签</van-divider>
+    <van-tree-select
+        v-model:active-id="activeIds"
+        v-model:main-active-index="activeIndex"
+        :items="tagList"
+        height="72%"
+    />
+  </div>
+
+  <!-- 搜索按钮 -->
+  <!-- https://vant-ui.github.io/vant/v3/#/zh-CN/button -->
+  <van-button type="primary" size="large" @click="doSearchResult" style="position: absolute; bottom: 50px">
+    搜索伙伴
+  </van-button>
 </template>
 
 <script setup lang="ts">
 import {ref} from 'vue';
+import {useRouter} from "vue-router";
+
+const router = useRouter();
 
 // 选择标签 分类选择
 const activeIds = ref([]);
@@ -106,6 +118,20 @@ const doClose = (tag) => {
     return item !== tag;
   })
 }
+
+/**
+ * 搜索按钮 用户列表
+ */
+const doSearchResult = () => {
+  // http://localhost:5173/#/user/list?tags=%E7%94%B7&tags=Python
+  router.push({
+    path: "/user/list",
+    query: {
+      tags: activeIds.value
+    }
+  })
+}
+
 </script>
 
 <style scoped>

@@ -2,7 +2,7 @@
   <!-- 导航条 fixed="true" -->
   <!-- https://vant-ui.github.io/vant/v3/#/zh-CN/nav-bar -->
   <van-nav-bar
-      title="标题"
+      :title="title"
       left-arrow
       fixed
       @click-left="onClickLeft"
@@ -44,9 +44,25 @@
 
 <script setup lang="ts">
 import {useRouter} from "vue-router";
+import {ref} from "vue";
+import routes from "../config/route.ts";
 
 // Vue Router
 const router = useRouter();
+// 动态标题
+const DEFAULT_TITLE = "伙伴匹配";
+const title = ref(DEFAULT_TITLE);
+
+/**
+ * 根据路由切换标题
+ */
+router.beforeEach((to, from) => {
+  const toPath = to.path;
+  const route = routes.find((route) => {
+    return toPath == route.path;
+  })
+  title.value = route?.title ?? DEFAULT_TITLE;
+});
 
 // 导航条
 const onClickLeft = () => {

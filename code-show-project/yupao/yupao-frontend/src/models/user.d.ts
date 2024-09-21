@@ -14,4 +14,5 @@ export type UserType = {
     userRole?: number | string,
     planetCode?: string,
     tags?: string[],
+    profile?: string,
 };

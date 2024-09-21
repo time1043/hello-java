@@ -1,18 +1,24 @@
 # yupao
 
-- Reference dev
-
-  [Vant UI](https://vant-ui.github.io/vant/v3/#/zh-CN), [Swagger](https://swagger.io/), [EasyExcel](https://easyexcel.opensource.alibaba.com/), 
-  
-- Reference blog
-
-  [swagger springboot](https://www.javabetter.cn/gongju/knife4j.html#%E6%95%B4%E5%90%88-knife4j), 
+[TOC]
 
 
 
 
 
 ## 背景介绍
+
+- Reference dev
+
+  [Vant UI](https://vant-ui.github.io/vant/v3/#/zh-CN), [Swagger](https://swagger.io/), [EasyExcel](https://easyexcel.opensource.alibaba.com/), 
+
+- Reference blog
+
+  [swagger springboot](https://www.javabetter.cn/gongju/knife4j.html#%E6%95%B4%E5%90%88-knife4j), 
+
+  
+
+
 
 ### 需求分析
 
@@ -173,7 +179,7 @@
 
   段位：学会一门语言、学会一个框架、独立开发前后端、架构设计与优化
 
-  身份：小学生、中学生、大学生、研究生、家里蹲、已就业
+  身份：小学鸡、中学生、大学生、研究生、家里蹲、已就业
 
   状态：有点丧、没心没肺、一般；单身、有对象、已婚
 
@@ -679,7 +685,7 @@
 
 
 
-### 假页面：首页 搜索页 ✔
+### 假页面：首页(用户列表页) ✔
 
 - src/pages/Index.vue
 
@@ -696,8 +702,14 @@
   
   </style>
   ```
+
   
-  src/pages/SearchPage.vue
+
+
+
+### 假页面：搜索页 ✔
+
+- src/pages/SearchPage.vue
 
   ```vue
   <template>
@@ -719,26 +731,31 @@
     <!-- https://vant-ui.github.io/vant/v3/#/zh-CN/collapse -->
     <!-- https://vant-ui.github.io/vant/v3/#/zh-CN/tree-select -->
     <van-divider dashed>已选标签</van-divider>
-    <div v-if="activeIds.length === 0">请选择标签...</div>
+    <div v-if="activeIds.length === 0" style="font-size: 12px; text-align: center">请选择标签...</div>
     <van-row gutter="16" style="padding: 0 16px">
       <van-col v-for="tag in activeIds">
-        <van-tag size="small" type="primary" closeable @close="doClose(tag)">
-          {{ tag }}
-        </van-tag>
+        <van-tag size="small" type="primary" closeable @close="doClose(tag)"> {{ tag }}</van-tag>
       </van-col>
     </van-row>
   
     <van-divider dashed>选择标签</van-divider>
     <van-tree-select
-        height="380px"
+        height="340px"
         v-model:active-id="activeIds"
         v-model:main-active-index="activeIndex"
         :items="tagList"
     />
+  
+    <!-- 搜索按钮 -->
+    <!-- https://vant-ui.github.io/vant/v3/#/zh-CN/button -->
+    <van-button type="primary" size="large" @click="doSearchResult">搜索伙伴</van-button>
   </template>
   
   <script setup lang="ts">
   import {ref} from 'vue';
+  import {useRouter} from "vue-router";
+  
+  const router = useRouter();
   
   // 选择标签 分类选择
   const activeIds = ref([]);
@@ -808,19 +825,45 @@
       return item !== tag;
     })
   }
+  
+  /**
+   * 搜索按钮 用户列表
+   */
+  const doSearchResult = () => {
+    // http://localhost:5173/#/user/list?tags=%E7%94%B7&tags=Python
+    router.push({
+      path: "/user/list",
+      query: {
+        tags: activeIds.value
+      }
+    })
+  }
+  
   </script>
   
   <style scoped>
   
   </style>
   ```
+
   
+
+
+
+### 假页面：搜索结果(用户列表页) ✔
+
+- src/pages/UserList.vue
+
+  ```vue
+  
+  ```
+
   
 
 
 
 
-### 假页面：团队页 ✔
+### 假页面：团队页 ✔✔✔
 
 - src/pages/Team.vue
 
@@ -838,57 +881,119 @@
   </style>
   ```
 
-  1
+  
 
 
 
 
 ### 假页面：个人页 修改页 ✔
 
-- src/pages/User.vue
+- src/pages/UserPage.vue
 
   ```vue
   <template>
     <!-- https://vant-ui.github.io/vant/v3/#/zh-CN/cell -->
-    <van-cell title="用户头像" is-link to="/user/edit" title-style="text-align:left; display:flex; align-items:center">
+    <van-cell title="头像" title-style="text-align:left; ">
       <van-image :src="user.avatarUrl" fit="cover" width="40" height="40"/>
     </van-cell>
-    <van-cell title="用户名" is-link to="/user/edit" :value="user.username"
-              title-style="text-align:left; display:flex; align-items:center"/>
+    <van-cell title="账号" :value="user.userAccount" />
+    <van-cell title="角色" :value="user.userRole" />
   
-    <van-cell title="用户账号" :value="user.userAccount"
-              title-style="text-align:left; display:flex; align-items:center"/>
-    <van-cell title="用户角色" :value="user.userRole"
-              title-style="text-align:left; display:flex; align-items:center"/>
+    <van-cell title="用户名" is-link :value="user.username"
+              @click="toEdit('username','用户名', user.username)"/>
+    <van-cell title="性别" is-link :value="user.gender"
+              @click="toEdit('gender','性别', user.gender as number )"/>
+    <van-cell title="手机号" is-link :value="user.phone"
+              @click="toEdit('phone','手机号', user.phone)"/>
+    <van-cell title="邮箱" is-link :value="user.email"
+              @click="toEdit('email','邮箱', user.email)"/>
   
-    <van-cell title="用户性别" is-link to="/user/edit" :value="user.gender"
-              title-style="text-align:left; display:flex; align-items:center"/>
-    <van-cell title="用户手机号" is-link to="/user/edit" :value="user.phone"
-              title-style="text-align:left; display:flex; align-items:center"/>
-    <van-cell title="用户邮箱" is-link to="/user/edit" :value="user.email"
-              title-style="text-align:left; display:flex; align-items:center"/>
-  
-    <van-cell title="创建时间" :value="user.createTime?.toISOString()" title-style="text-align:left; display:flex; align-items:center"/>
-    <van-cell title="星球代码" :value="user.planetCode" title-style="text-align:left; display:flex; align-items:center"/>
-    <van-cell title="用户标签" is-link to="/user/edit" :value="user.tags"
-              title-style="text-align:left; display:flex; align-items:center"/>
+    <van-cell title="创建时间" :value="user.createTime?.toISOString()" />
+    <van-cell title="星球代码" :value="user.planetCode" />
+    <van-cell title="用户标签" is-link :value="user.tags" />
   </template>
   
   <script setup lang="ts">
   import {UserType} from "../models/user";
+  import {useRouter} from "vue-router";
+  
+  const router = useRouter();
   
   const user: UserType = {
     id: 1,
     username: "oswin",
     userAccount: "oswin501",
     avatarUrl: "https://miro.medium.com/v2/resize:fit:640/format:webp/1*4j2A9niz0eq-mRaCPUffpg.png",
-    gender: 1,
+    gender: 1,  // 若1则男，若0则女
     phone: "15534340089",
     email: "oswin501@gmail.com",
     createTime: new Date(),
     userRole: 1,
     planetCode: "nn00000001",
     tags: ["java", "cpp"],
+  };
+  user.gender = user.gender === 1 ? '男' : '女';
+  user.userRole = user.userRole === 1 ? '管理员' : '普通用户';
+  
+  // 编辑用户信息 路由传参
+  const toEdit = (editKey: string, editName: string, currentValue: number | string | undefined) => {
+    router.push({
+      path: "/user/edit",
+      query: {editKey, editName, currentValue,},
+    })
+  }
+  
+  </script>
+  
+  <style scoped>
+  
+  </style>
+  ```
+  
+- src/pages/UserEditPage.vue
+
+  ```vue
+  <template>
+    <!--https://vant-ui.github.io/vant/v3/#/zh-CN/form-->
+    <van-form @submit="onSubmit">
+      <van-cell-group inset>
+        <van-field
+            v-model="editUser.currentValue"
+            :name="editUser.editKey"
+            :label="editUser.editName"
+            :placeholder="`请输入${editUser.editName}`"
+            :rules="[{ required: true, message: '请填写用户性别' }]"
+        />
+      </van-cell-group>
+      <div style="margin: 16px;">
+        <van-button round block type="primary" native-type="submit">
+          确认修改
+        </van-button>
+      </div>
+    </van-form>
+  </template>
+  
+  <script setup lang="ts">
+  import {useRoute, useRouter} from "vue-router";
+  import {ref} from "vue";
+  
+  const router = useRouter();
+  const route = useRoute();
+  
+  // 取到路由参数
+  console.log(route.query)
+  
+  // 表单数据 对象定义
+  const editUser = ref({
+    editKey: route.query.editKey,
+    editName: route.query.editName,
+    currentValue: route.query.currentValue,
+  })
+  // editUser.value.currentValue = editUser.value.currentValue === "1" ? "男" : "女"
+  
+  const onSubmit = (values) => {
+    console.log('submit', values);  // { editKey: "gender", editName: "性别", currentValue: "1" }
+    // TODO：将editKey editName currentValue提交到后端
   };
   </script>
   
@@ -899,7 +1004,7 @@
 
   
 
-  
+
 
 ### 路由配置
 
@@ -1039,6 +1144,45 @@
 
 
 
+### 配置文件
+
+- src/main/resources/application.yml
+
+  ```yml
+  spring:
+    profiles:
+      active: dev
+    application:
+      name: yupao-backend
+    # Database configuration
+    datasource:
+      driver-class-name: com.mysql.jdbc.Driver  # com.mysql.cj.jdbc.Driver
+      url: jdbc:mysql://localhost:3306/yupao
+      username: root
+      password: 123456
+    session:
+      timeout: 86400 # 1天的session过期时间
+  server:
+    port: 8080
+    servlet:
+      context-path: /api # 指定接口全局api前缀
+  
+  mybatis-plus:
+    configuration:
+      map-underscore-to-camel-case: false  # 字段转换
+      log-impl: org.apache.ibatis.logging.stdout.StdOutImpl # 日志输出
+    global-config:
+      db-config:
+        logic-delete-field: isDelete # 全局逻辑删除的实体字段名(since 3.3.0,配置后可以忽略不配置步骤2)
+        logic-delete-value: 1 # 逻辑已删除值(默认为 1)
+        logic-not-delete-value: 0 # 逻辑未删除值(默认为 0)
+  
+  ```
+
+  
+
+
+
 ### 中间件配置
 
 - MySQL
@@ -1086,7 +1230,7 @@
 
   引入依赖 -> 自定义Swagger配置项 -> 定义代码位置 (线上环境不要把接口全部暴露)
 
-- 隐藏部分接口
+- 向上环境不要暴露接口
 
   
 
@@ -1094,12 +1238,29 @@
 
 ## 前端页面 用户标签
 
-- 需求
+- 需求 (与后端联调)
 
   搜索页
 
   用户页、用户修改页
   
+  
+  
+
+
+
+### 前端页面跳转传值 ✔
+
+- 跳转传值 (多种实现)
+
+  router.query：本质是url.searchParms，url后附加参数，传递的值长度有限
+
+  router.params：动态路由，参数量更少
+
+  vuex全局状态管理：搜索页将关键词塞到状态中，搜索结果页从状态中取值
+
+  prop：父子组件传值
+
   
 
 
@@ -1208,7 +1369,7 @@
 
 - 需求
 
-  所有星球用户信息：接口爬虫 -> 数据清洗 -> 数据导入excel
+  所有星球用户信息：接口爬虫(httpclient okhttp) -> 数据清洗 -> 数据导入excel
 
   自我介绍的标签信息：导入
 
@@ -1231,6 +1392,181 @@
   同步读：无需创建监听器，要获取完整数据 (简单直接；但数据量大 有等待时长 容易卡顿甚至内存溢出)
 
   
+
+
+
+---
+
+- src/main/java/com/time1043/yupaobackend/once/ImportUser.java
+
+  ```java
+  package com.time1043.yupaobackend.once;
+  
+  import com.alibaba.excel.EasyExcel;
+  import org.apache.commons.lang3.StringUtils;
+  
+  import java.util.List;
+  import java.util.Map;
+  import java.util.Objects;
+  import java.util.stream.Collectors;
+  
+  /**
+   * 任务 导入用户数据 (包含数据清洗)
+   *
+   * @author oswin
+   */
+  public class ImportUser {
+      public static void main(String[] args) {
+          String fileName = "/opt/code/java-code/hello-java/code-show-project/yupao/yupao-backend/data/user.xlsx";
+          List<ZSXQTableUserInfo> userInfoList = EasyExcel.read(fileName).head(ZSXQTableUserInfo.class).sheet().doReadSync();
+  
+          // 判断用户重复
+          Map<String, List<ZSXQTableUserInfo>> listMap = userInfoList.stream()   // 先转换为map
+                  .filter(userInfo -> StringUtils.isNotEmpty(userInfo.getUsername()))  // 过滤掉空用户名
+                  .collect(Collectors.groupingBy(ZSXQTableUserInfo::getUsername));   // 按用户名分组
+          System.out.println("sum: " + userInfoList.size());
+          System.out.println("enum: " + listMap.keySet().size());
+  
+          // 输出重复的用户名
+          for (Map.Entry<String, List<ZSXQTableUserInfo>> stringListEntry : listMap.entrySet()) {
+              if (stringListEntry.getValue().size() > 1) {
+                  System.out.println("=====================================");
+                  System.out.println("username: " + stringListEntry.getKey());
+              }
+          }
+      }
+  }
+  
+  ```
+
+- src/main/java/com/time1043/yupaobackend/once/ImportExcel.java
+
+  ```java
+  package com.time1043.yupaobackend.once;
+  
+  import com.alibaba.excel.EasyExcel;
+  import com.alibaba.excel.read.listener.PageReadListener;
+  
+  import java.util.List;
+  import java.util.Map;
+  
+  /**
+   * 工具 导入Excel数据
+   *
+   * @author oswin
+   */
+  public class ImportExcel {
+  
+      public static void main(String[] args) {
+          String fileName = "/opt/code/java-code/hello-java/code-show-project/yupao/yupao-backend/data/user.xlsx";
+          //readByListener(fileName);
+          synchronousRead(fileName);
+      }
+  
+      /**
+       * 读取Excel数据，监听器模式
+       *
+       * @param fileName Excel文件路径
+       */
+      public static void readByListener(String fileName) {
+          // https://easyexcel.opensource.alibaba.com/docs/current/quickstart/read#%E4%BB%A3%E7%A0%81
+          EasyExcel.read(fileName, ZSXQTableUserInfo.class, new TableListener()).sheet().doRead();
+      }
+  
+      /**
+       * 读取Excel数据，同步读取模式
+       *
+       * @param fileName Excel文件路径
+       */
+      public static void synchronousRead(String fileName) {
+          // https://easyexcel.opensource.alibaba.com/docs/current/quickstart/read#%E5%90%8C%E6%AD%A5%E7%9A%84%E8%BF%94%E5%9B%9E
+          List<ZSXQTableUserInfo> totalDataList = EasyExcel.read(fileName).head(ZSXQTableUserInfo.class).sheet().doReadSync();
+          for (ZSXQTableUserInfo zsxqTableUserInfo : totalDataList) {
+              System.out.println(zsxqTableUserInfo);
+          }
+      }
+  }
+  
+  ```
+
+  src/main/java/com/time1043/yupaobackend/once/TableListener.java
+
+  ```java
+  package com.time1043.yupaobackend.once;
+  // https://easyexcel.opensource.alibaba.com/docs/current/quickstart/read#%E6%9C%80%E7%AE%80%E5%8D%95%E7%9A%84%E8%AF%BB%E7%9A%84%E7%9B%91%E5%90%AC%E5%99%A8
+  
+  import com.alibaba.excel.context.AnalysisContext;
+  import com.alibaba.excel.read.listener.ReadListener;
+  import lombok.extern.slf4j.Slf4j;
+  
+  /**
+   * 自定义的监听器，用于读取Excel数据
+   *
+   * @author oswin
+   */
+  @Slf4j
+  public class TableListener implements ReadListener<ZSXQTableUserInfo> {
+      // 有个很重要的点 DemoDataListener 不能被spring管理，要每次读取excel都要new,然后里面用到spring可以构造方法传进去
+  
+      /**
+       * 这个每一条数据解析都会来调用
+       *
+       * @param data    one row value. Is is same as {@link AnalysisContext#readRowHolder()}
+       * @param context
+       */
+      @Override
+      public void invoke(ZSXQTableUserInfo data, AnalysisContext context) {
+          System.out.println(data);
+      }
+  
+      /**
+       * 所有数据解析完成了 都会来调用
+       *
+       * @param context
+       */
+      @Override
+      public void doAfterAllAnalysed(AnalysisContext context) {
+          System.out.println("所有数据解析完成了");
+      }
+  
+  }
+  ```
+
+  src/main/java/com/time1043/yupaobackend/once/ZSXQTableUserInfo.java
+
+  ```java
+  package com.time1043.yupaobackend.once;
+  // https://easyexcel.opensource.alibaba.com/docs/current/quickstart/read#%E5%AF%B9%E8%B1%A1
+  
+  import com.alibaba.excel.annotation.ExcelProperty;
+  import lombok.Data;
+  import lombok.EqualsAndHashCode;
+  
+  /**
+   * Excel 映射实体类
+   */
+  @Data
+  @EqualsAndHashCode
+  public class ZSXQTableUserInfo {
+  
+      @ExcelProperty("成员编号")  // index = 0
+      private String planetCode;
+  
+      @ExcelProperty("成员昵称")
+      private String username;
+  
+  }
+  ```
+
+  
+
+
+
+### 分布式session登陆 ✔
+
+
+
+
 
 
 

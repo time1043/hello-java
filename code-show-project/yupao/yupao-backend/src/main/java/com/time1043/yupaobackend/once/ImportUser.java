@@ -1,9 +1,11 @@
 package com.time1043.yupaobackend.once;
 
 import com.alibaba.excel.EasyExcel;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -17,9 +19,18 @@ public class ImportUser {
         List<ZSXQTableUserInfo> userInfoList = EasyExcel.read(fileName).head(ZSXQTableUserInfo.class).sheet().doReadSync();
 
         // 判断用户重复
-        Map<String, List<ZSXQTableUserInfo>> listMap = userInfoList.stream().collect(Collectors.groupingBy(ZSXQTableUserInfo::getUsername));
+        Map<String, List<ZSXQTableUserInfo>> listMap = userInfoList.stream()   // 先转换为map
+                .filter(userInfo -> StringUtils.isNotEmpty(userInfo.getUsername()))  // 过滤掉空用户名
+                .collect(Collectors.groupingBy(ZSXQTableUserInfo::getUsername));   // 按用户名分组
         System.out.println("sum: " + userInfoList.size());
-        System.out.println("repeat: " + listMap.keySet().size());
+        System.out.println("enum: " + listMap.keySet().size());
 
+        // 输出重复的用户名
+        for (Map.Entry<String, List<ZSXQTableUserInfo>> stringListEntry : listMap.entrySet()) {
+            if (stringListEntry.getValue().size() > 1) {
+                System.out.println("=====================================");
+                System.out.println("username: " + stringListEntry.getKey());
+            }
+        }
     }
 }

@@ -3,21 +3,21 @@
   <van-cell title="头像" title-style="text-align:left; ">
     <van-image :src="user.avatarUrl" fit="cover" width="40" height="40"/>
   </van-cell>
-  <van-cell title="账号" :value="user.userAccount" title-style="text-align:left;"/>
-  <van-cell title="角色" :value="user.userRole" title-style="text-align:left;"/>
+  <van-cell title="账号" :value="user.userAccount" />
+  <van-cell title="角色" :value="user.userRole" />
 
-  <van-cell title="用户名" is-link :value="user.username" title-style="text-align:left;"
+  <van-cell title="用户名" is-link :value="user.username"
             @click="toEdit('username','用户名', user.username)"/>
-  <van-cell title="性别" is-link :value="user.gender" title-style="text-align:left; "
+  <van-cell title="性别" is-link :value="user.gender"
             @click="toEdit('gender','性别', user.gender as number )"/>
-  <van-cell title="手机号" is-link :value="user.phone" title-style="text-align:left;"
+  <van-cell title="手机号" is-link :value="user.phone"
             @click="toEdit('phone','手机号', user.phone)"/>
-  <van-cell title="邮箱" is-link :value="user.email" title-style="text-align:left;"
+  <van-cell title="邮箱" is-link :value="user.email"
             @click="toEdit('email','邮箱', user.email)"/>
 
-  <van-cell title="创建时间" :value="user.createTime?.toISOString()" title-style="text-align:left;"/>
-  <van-cell title="星球代码" :value="user.planetCode" title-style="text-align:left;"/>
-  <van-cell title="用户标签" is-link :value="user.tags" title-style="text-align:left;"/>
+  <van-cell title="创建时间" :value="user.createTime?.toISOString()" />
+  <van-cell title="星球代码" :value="user.planetCode" />
+  <van-cell title="用户标签" is-link :value="user.tags" />
 </template>
 
 <script setup lang="ts">
