@@ -10,7 +10,7 @@
 
 - Reference dev
 
-  [Vant UI](https://vant-ui.github.io/vant/v3/#/zh-CN), [Swagger](https://swagger.io/), [EasyExcel](https://easyexcel.opensource.alibaba.com/), 
+  [Vant UI](https://vant-ui.github.io/vant/v3/#/zh-CN), [Swagger](https://swagger.io/), [EasyExcel](https://easyexcel.opensource.alibaba.com/), [Axios](https://axios-http.com/zh/docs/intro), [Redis](https://redis.io/), 
 
 - Reference blog
 
@@ -177,9 +177,9 @@
 
   目标：春招、秋招、社招、考研、考公、竞赛(蓝桥杯)、转行、跳槽
 
-  段位：学会一门语言、学会一个框架、独立开发前后端、架构设计与优化
+  段位：学会一门语言、学会一个框架、独立开发前后端、架构设计与优化、入门AI算法、入门游戏开发
 
-  身份：小学鸡、中学生、大学生、研究生、家里蹲、已就业
+  身份：小学鸡、中学生、大学生、研究生、家里蹲、已就业、已退休
 
   状态：有点丧、没心没肺、一般；单身、有对象、已婚
 
@@ -387,6 +387,318 @@
 
 
 
+## 后端初始化
+
+- 启动日志 ASCII艺术
+
+  https://zh.rakko.tools/tools/68/
+
+  ```
+    ______        _______.____    __    ____  __  .__   __.
+   /  __  \      /       |\   \  /  \  /   / |  | |  \ |  |
+  |  |  |  |    |   (----` \   \/    \/   /  |  | |   \|  |
+  |  |  |  |     \   \      \            /   |  | |  . `  |
+  |  `--'  | .----)   |      \    /\    /    |  | |  |\   |
+   \______/  |_______/        \__/  \__/     |__| |__| \__|
+  
+  
+     U  ___ u   ____                                   _   _
+      \/"_ \/  / __"| u   __        __      ___       | \ |"|
+      | | | | <\___ \/    \"\      /"/     |_"_|     <|  \| |>
+  .-,_| |_| |  u___) |    /\ \ /\ / /\      | |      U| |\  |u
+   \_)-\___/   |____/>>  U  \ V  V /  U   U/| |\u     |_| \_|
+        \\      )(  (__) .-,_\ /\ /_,-..-,_|___|_,-.  ||   \\,-.
+       (__)    (__)       \_)-'  '-(_/  \_)-' '-(_/   (_")  (_/
+  
+  
+      ___        ___                      ( )       __
+    //   ) )   ((   ) )   //  / /  / /   / /     //   ) )
+   //   / /     \ \      //  / /  / /   / /     //   / /
+  ((___/ /   //   ) )   ((__( (__/ /   / /     //   / /
+  
+  
+   ________  ________  ___       __   ___  ________      
+  |\   __  \|\   ____\|\  \     |\  \|\  \|\   ___  \    
+  \ \  \|\  \ \  \___|\ \  \    \ \  \ \  \ \  \\ \  \   
+   \ \  \\\  \ \_____  \ \  \  __\ \  \ \  \ \  \\ \  \  
+    \ \  \\\  \|____|\  \ \  \|\__\_\  \ \  \ \  \\ \  \ 
+     \ \_______\____\_\  \ \____________\ \__\ \__\\ \__\
+      \|_______|\_________\|____________|\|__|\|__| \|__|
+               \|_________|                              
+  
+  
+           _______                   _____                    _____                    _____                    _____
+          /::\    \                 /\    \                  /\    \                  /\    \                  /\    \
+         /::::\    \               /::\    \                /::\____\                /::\    \                /::\____\
+        /::::::\    \             /::::\    \              /:::/    /                \:::\    \              /::::|   |
+       /::::::::\    \           /::::::\    \            /:::/   _/___               \:::\    \            /:::::|   |
+      /:::/~~\:::\    \         /:::/\:::\    \          /:::/   /\    \               \:::\    \          /::::::|   |
+     /:::/    \:::\    \       /:::/__\:::\    \        /:::/   /::\____\               \:::\    \        /:::/|::|   |
+    /:::/    / \:::\    \      \:::\   \:::\    \      /:::/   /:::/    /               /::::\    \      /:::/ |::|   |
+   /:::/____/   \:::\____\   ___\:::\   \:::\    \    /:::/   /:::/   _/___    ____    /::::::\    \    /:::/  |::|   | _____
+  |:::|    |     |:::|    | /\   \:::\   \:::\    \  /:::/___/:::/   /\    \  /\   \  /:::/\:::\    \  /:::/   |::|   |/\    \
+  |:::|____|     |:::|    |/::\   \:::\   \:::\____\|:::|   /:::/   /::\____\/::\   \/:::/  \:::\____\/:: /    |::|   /::\____\
+   \:::\    \   /:::/    / \:::\   \:::\   \::/    /|:::|__/:::/   /:::/    /\:::\  /:::/    \::/    /\::/    /|::|  /:::/    /
+    \:::\    \ /:::/    /   \:::\   \:::\   \/____/  \:::\/:::/   /:::/    /  \:::\/:::/    / \/____/  \/____/ |::| /:::/    /
+     \:::\    /:::/    /     \:::\   \:::\    \       \::::::/   /:::/    /    \::::::/    /                   |::|/:::/    /
+      \:::\__/:::/    /       \:::\   \:::\____\       \::::/___/:::/    /      \::::/____/                    |::::::/    /
+       \::::::::/    /         \:::\  /:::/    /        \:::\__/:::/    /        \:::\    \                    |:::::/    /
+        \::::::/    /           \:::\/:::/    /          \::::::::/    /          \:::\    \                   |::::/    /
+         \::::/    /             \::::::/    /            \::::::/    /            \:::\    \                  /:::/    /
+          \::/____/               \::::/    /              \::::/    /              \:::\____\                /:::/    /
+           ~~                      \::/    /                \::/____/                \::/    /                \::/    /
+                                    \/____/                  ~~                       \/____/                  \/____/
+  
+  
+  +--------------------------------------------------------------------------------------------------------------------+
+  |     U  ___ u   ____                                   _   _                                                        |
+  |      \/"_ \/  / __"| u   __        __      ___       | \ |"|                                                       |       
+  |      | | | | <\___ \/    \"\      /"/     |_"_|     <|  \| |>                                                      |
+  |  .-,_| |_| |  u___) |    /\ \ /\ / /\      | |      U| |\  |u                                                      |
+  |   \_)-\___/   |____/>>  U  \ V  V /  U   U/| |\u     |_| \_|                                                       |
+  |        \\      )(  (__) .-,_\ /\ /_,-..-,_|___|_,-.  ||   \\,-.                                                    |
+  |       (__)    (__)       \_)-'  '-(_/  \_)-' '-(_/   (_")  (_/                                                     |
+  +--------------------------------------------------------------------------------------------------------------------+
+  |  Project: yupao; Author: oswin                                                                                     |
+  |  If your job requires me, please feel free to invite me for an interview: 2818098786@qq.com.                       |
+  +--------------------------------------------------------------------------------------------------------------------+
+  
+  
+    .   ____          _            __ _ _
+   /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+  ( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+   \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+    '  |____| .__|_| |_|_| |_\__, | / / / /
+   =========|_|==============|___/=/_/_/_/
+   :: Spring Boot ::               (v2.6.13)
+  
+  ```
+
+  
+
+
+
+### 新建项目
+
+- 基于用户中心
+
+  ```bash
+  cp -r ../user-center/user-center-backend/ ./yupao-backend
+  cd yupao-backend/ && rm -rf .idea/ target/
+  
+  # 全局替换
+  # user-center-backend -> yupao-backend
+  # 启动类
+  # UserCenterBackendApplication -> YupaoBackendApplication
+  # 
+  # Ctrl+Shift+A -> Add Maven Projects
+  
+  ```
+
+  
+
+
+
+### 依赖配置
+
+- 依赖配置
+
+  spring, mybatis, juit
+
+  mysql, redis
+
+  json
+
+  ```xml
+          <!-- https://mvnrepository.com/artifact/com.google.code.gson/gson -->
+          <dependency>
+              <groupId>com.google.code.gson</groupId>
+              <artifactId>gson</artifactId>
+              <version>2.8.9</version>
+          </dependency>
+  ```
+
+  swagger
+
+  ```xml
+          <!-- swagger -->
+          <!-- https://mvnrepository.com/artifact/io.springfox/springfox-swagger2 -->
+          <dependency>
+              <groupId>io.springfox</groupId>
+              <artifactId>springfox-swagger2</artifactId>
+              <version>3.0.0</version>
+          </dependency>
+          <!-- https://mvnrepository.com/artifact/io.springfox/springfox-swagger-ui -->
+          <dependency>
+              <groupId>io.springfox</groupId>
+              <artifactId>springfox-swagger-ui</artifactId>
+              <version>3.0.0</version>
+          </dependency>
+  ```
+
+  easyexcel
+
+  ```xml
+          <!-- https://mvnrepository.com/artifact/com.alibaba/easyexcel -->
+          <dependency>
+              <groupId>com.alibaba</groupId>
+              <artifactId>easyexcel</artifactId>
+              <version>3.1.1</version>
+          </dependency>
+  ```
+
+  
+
+
+
+### 配置文件
+
+- src/main/resources/application.yml
+
+  ```yml
+  spring:
+    profiles:
+      active: dev
+    application:
+      name: yupao-backend
+    # Database configuration
+    datasource:
+      driver-class-name: com.mysql.jdbc.Driver  # com.mysql.cj.jdbc.Driver
+      url: jdbc:mysql://localhost:3306/yupao
+      username: root
+      password: 123456
+    session:
+      timeout: 86400 # 1天的session过期时间
+  server:
+    port: 8002
+    servlet:
+      context-path: /api # 指定接口全局api前缀
+  
+  mybatis-plus:
+    configuration:
+      map-underscore-to-camel-case: false  # 字段转换
+      log-impl: org.apache.ibatis.logging.stdout.StdOutImpl # 日志输出
+    global-config:
+      db-config:
+        logic-delete-field: isDelete # 全局逻辑删除的实体字段名(since 3.3.0,配置后可以忽略不配置步骤2)
+        logic-delete-value: 1 # 逻辑已删除值(默认为 1)
+        logic-not-delete-value: 0 # 逻辑未删除值(默认为 0)
+  
+  ```
+
+  
+
+
+
+### 中间件配置
+
+- MySQL
+
+  ```bash
+  # docker mysql8
+  mkdir -p /opt/data/mysql/data /opt/data/mysql/conf /opt/data/mysql/init  # rz -E
+  docker run -d \
+    --name mysql \
+    -p 3306:3306 \
+    -e TZ=Asia/Shanghai \
+    -e MYSQL_ROOT_PASSWORD=123456 \
+    -v /opt/data/mysql/data:/var/lib/mysql \
+    -v /opt/data/mysql/conf:/etc/mysql/conf.d \
+    -v /opt/data/mysql/init:/docker-entrypoint-initdb.d \
+    mysql:8
+  
+  docker start mysql
+  docker exec -it mysql bash
+  mysql -uroot -p123456
+  
+  drop database if exists yupao;
+  create database if not exists yupao;
+  use yupao;
+  
+  ```
+  
+- Redis
+
+  https://redis.io/docs/latest/operate/oss_and_stack/install/
+
+  ```bash
+  mkdir /opt/data/redis/data && cd /opt/data/redis
+  wget https://raw.githubusercontent.com/redis/redis/5.0/redis.conf
+  # wget http://download.redis.io/redis-stable/redis.conf
+  
+  chmod 777 redis.conf
+  vim redis.conf
+  
+  # bind 127.0.0.1 ::1  
+  # 注释掉  # 解除本地连接限制
+  
+  # protected-mode yes  
+  # protected-mode no  # 保护模式限制为本地访问 修改后解除保护模式
+  
+  # daemonize no  
+  # daemonize yes  # 修改为守护进程
+  
+  # requirepass foobared  
+  # requirepass 123456  # 设置密码
+  
+  
+  # https://hub.docker.com/_/redis/tags
+  docker pull redis:5.0.14
+  docker run -p 6379:6379 --name redis5 \
+    -d redis:5.0.14 \
+    --appendonly yes \
+    --requirepass 123456
+  docker run -p 6379:6379 --name redis5 \
+    -v /opt/data/redis/redis.conf:/etc/redis/redis.conf \
+    -v /opt/data/redis/data:/data \
+    -d redis:5.0.14 redis-server /etc/redis/redis.conf \
+    --appendonly yes \
+    --requirepass 123456
+  
+  docker exec -it redis5 bash
+  redis-cli
+  auth 123456
+  
+  ```
+  
+  
+
+
+
+### 补全学习 ✔
+
+- 补习
+
+  Java8特性：lambda、stream、parallelStream流式处理、Optional可选类
+
+  MyBatisPlus：ORM 免SQL的API
+
+
+
+
+
+### 接口文档 ✔
+
+- 接口文档
+
+  写接口信息的文档 (前端 后端 项目负责人)
+
+  接口信息：请求参数、响应参数(错误码)、接口地址、接口名称、请求类型、请求格式、备注
+
+  文档作用：项目维护参考、开发联调介质、在线调试
+
+  实现方式：md笔记手写、自动化接口文档生成([`Swagger`](https://swagger.io/), `Postman`, `Apifox`, `Apipost`, `Eolink`)
+
+- 整合 Swagger Knife4j
+
+  引入依赖 -> 自定义Swagger配置项 -> 定义代码位置 (线上环境不要把接口全部暴露)
+
+- 向上环境不要暴露接口
+
+  
+
+
+
 ## 前端初始化
 
 ### 新建项目
@@ -454,11 +766,17 @@
   
   ```
 
-  整合路由 [Vue-Router](https://router.vuejs.org/zh/)
+  整合路由 [Vue-Router](https://router.vuejs.org/zh/guide/)
 
   ```bash
   npm install vue-router@4
-  # https://router.vuejs.org/zh/guide/
+  
+  ```
+  
+  整合请求库 [Axois](https://axios-http.com/zh/docs/intro)
+  
+  ```bash
+  npm install axios qs
   
   ```
   
@@ -530,6 +848,7 @@
   mkdir src/pages && touch src/pages/Index.vue src/pages/Team.vue src/pages/UserEditPage.vue
   mkdir src/config && touch src/config/route.ts
   mkdir src/models && touch src/models/user.d.ts
+  mkdir src/plugins && touch src/plugins/myAxois.ts
   
   ```
   
@@ -613,687 +932,6 @@
   ```
 
   
-
-
-
-### 假页面：基础布局 ✔
-
-- src/layouts/BasicLayout.vue
-
-  ```vue
-  <template>
-    <!-- 导航条 -->
-    <van-nav-bar
-        title="标题"
-        left-arrow
-        fixed="true"
-        @click-left="onClickLeft"
-        @click-right="onClickRight"
-    >
-      <template #right>
-        <van-icon name="search" size="18"/>
-      </template>
-    </van-nav-bar>
-  
-    <!-- 中间内容：插槽/路由、或根据点击切换页面 -->
-    <!-- <slot name="content"></slot>-->
-    <div id="content">
-  
-      <!-- WAY1: v-if active -->
-      <!--
-      <template v-if="active === 'index'">
-        <Index/>
-      </template>
-      <template v-if="active === 'team'">
-        <Team/>
-      </template>
-      -->
-  
-      <!-- WAY2: Vue Router -->
-      <!-- https://vant-ui.github.io/vant/v3/#/zh-CN/tabbar -->
-      <RouterView/>
-    </div>
-  
-    <!-- 底部栏 -->
-    <!-- <van-tabbar route v-model="active" @change="onChange">-->
-    <van-tabbar route @change="onChange">
-      <van-tabbar-item icon="home-o" name="index" to="/">主页</van-tabbar-item>
-      <van-tabbar-item icon="search" name="team" to="/team">队伍</van-tabbar-item>
-      <van-tabbar-item icon="friends-o" name="user" to="/user">个人</van-tabbar-item>
-    </van-tabbar>
-  
-  </template>
-  
-  <script setup lang="ts">
-  
-  // 导航条
-  const onClickLeft = () => console.log('点击左侧按钮');
-  const onClickRight = () => console.log('点击右侧按钮')
-  
-  // 底部栏
-  // const active = ref("index");
-  const onChange = (index) => console.log(index);
-  </script>
-  
-  <style scoped>
-  
-  </style>
-  
-  ```
-  
-  
-
-
-
-### 假页面：首页(用户列表页) ✔
-
-- src/pages/Index.vue
-
-  ```vue
-  <template>
-    首页
-  </template>
-  
-  <script setup lang="ts">
-  
-  </script>
-  
-  <style scoped>
-  
-  </style>
-  ```
-
-  
-
-
-
-### 假页面：搜索页 ✔
-
-- src/pages/SearchPage.vue
-
-  ```vue
-  <template>
-    <!-- 搜索框 -->
-    <!-- https://vant-ui.github.io/vant/v3/#/zh-CN/search -->
-    <form action="/">
-      <van-search
-          v-model="searchText"
-          show-action
-          placeholder="请输入搜索标签"
-          @search="onSearch"
-          @cancel="onCancel"
-      />
-    </form>
-  
-    <!-- 标签列表 -->
-    <!-- https://vant-ui.github.io/vant/v3/#/zh-CN/tag -->
-    <!-- https://vant-ui.github.io/vant/v3/#/zh-CN/divider -->
-    <!-- https://vant-ui.github.io/vant/v3/#/zh-CN/collapse -->
-    <!-- https://vant-ui.github.io/vant/v3/#/zh-CN/tree-select -->
-    <van-divider dashed>已选标签</van-divider>
-    <div v-if="activeIds.length === 0" style="font-size: 12px; text-align: center">请选择标签...</div>
-    <van-row gutter="16" style="padding: 0 16px">
-      <van-col v-for="tag in activeIds">
-        <van-tag size="small" type="primary" closeable @close="doClose(tag)"> {{ tag }}</van-tag>
-      </van-col>
-    </van-row>
-  
-    <van-divider dashed>选择标签</van-divider>
-    <van-tree-select
-        height="340px"
-        v-model:active-id="activeIds"
-        v-model:main-active-index="activeIndex"
-        :items="tagList"
-    />
-  
-    <!-- 搜索按钮 -->
-    <!-- https://vant-ui.github.io/vant/v3/#/zh-CN/button -->
-    <van-button type="primary" size="large" @click="doSearchResult">搜索伙伴</van-button>
-  </template>
-  
-  <script setup lang="ts">
-  import {ref} from 'vue';
-  import {useRouter} from "vue-router";
-  
-  const router = useRouter();
-  
-  // 选择标签 分类选择
-  const activeIds = ref([]);
-  const activeIndex = ref(0);
-  
-  /**
-   * 标签列表 封装响应式
-   */
-  const originTagList = [
-    {
-      text: '性别',
-      children: [
-        {text: '男', id: '男'},
-        {text: '女', id: '女'},
-        {text: 'Javaer', id: 'Javaer'},
-        {text: '未知', id: '未知', disabled: true},
-      ],
-    },
-    {
-      text: '语言',
-      children: [
-        {text: 'Java', id: 'Java'},
-        {text: 'Python', id: 'Python'},
-        {text: 'JavaScript', id: 'JavaScript'},
-        {text: 'TypeScript', id: 'TypeScript'},
-        {text: 'PHP', id: 'PHP'},
-        {text: 'C++', id: 'C++'},
-        {text: 'C#', id: 'C#'},
-        {text: 'Go', id: 'Go'},
-        {text: 'Kotlin', id: 'Kotlin'},
-        {text: 'Swift', id: 'Swift'},
-        {text: 'Bug', id: 'Bug'},
-      ],
-    },
-  ];
-  let tagList = ref(originTagList);
-  
-  /**
-   * 搜索过滤
-   * @param val
-   */
-  const onSearch = (val) => {
-    // 抽出标签列表 打平  // 过滤
-    tagList.value = originTagList.map(parentTag => {
-      const tempChildren = [...parentTag.children];
-      const tempParentTag = {...parentTag};
-      tempParentTag.children = tempChildren.filter(item => item.text.includes(searchText.value));
-      console.log(typeof tempParentTag)
-      console.log(tempParentTag)
-  
-      // TODO
-      activeIndex.value = 1;
-      return tempParentTag;
-    });
-  }
-  
-  // 搜索框
-  const searchText = ref('');
-  const onCancel = () => {
-    searchText.value = '';
-    tagList.value = originTagList;
-  }
-  
-  // 标签列表 删除标签
-  const doClose = (tag) => {
-    activeIds.value = activeIds.value.filter(item => {
-      return item !== tag;
-    })
-  }
-  
-  /**
-   * 搜索按钮 用户列表
-   */
-  const doSearchResult = () => {
-    // http://localhost:5173/#/user/list?tags=%E7%94%B7&tags=Python
-    router.push({
-      path: "/user/list",
-      query: {
-        tags: activeIds.value
-      }
-    })
-  }
-  
-  </script>
-  
-  <style scoped>
-  
-  </style>
-  ```
-
-  
-
-
-
-### 假页面：搜索结果(用户列表页) ✔
-
-- src/pages/UserList.vue
-
-  ```vue
-  
-  ```
-
-  
-
-
-
-
-### 假页面：团队页 ✔✔✔
-
-- src/pages/Team.vue
-
-  ```vue
-  <template>
-    队伍页面
-  </template>
-  
-  <script setup lang="ts">
-  
-  </script>
-  
-  <style scoped>
-  
-  </style>
-  ```
-
-  
-
-
-
-
-### 假页面：个人页 修改页 ✔
-
-- src/pages/UserPage.vue
-
-  ```vue
-  <template>
-    <!-- https://vant-ui.github.io/vant/v3/#/zh-CN/cell -->
-    <van-cell title="头像" title-style="text-align:left; ">
-      <van-image :src="user.avatarUrl" fit="cover" width="40" height="40"/>
-    </van-cell>
-    <van-cell title="账号" :value="user.userAccount" />
-    <van-cell title="角色" :value="user.userRole" />
-  
-    <van-cell title="用户名" is-link :value="user.username"
-              @click="toEdit('username','用户名', user.username)"/>
-    <van-cell title="性别" is-link :value="user.gender"
-              @click="toEdit('gender','性别', user.gender as number )"/>
-    <van-cell title="手机号" is-link :value="user.phone"
-              @click="toEdit('phone','手机号', user.phone)"/>
-    <van-cell title="邮箱" is-link :value="user.email"
-              @click="toEdit('email','邮箱', user.email)"/>
-  
-    <van-cell title="创建时间" :value="user.createTime?.toISOString()" />
-    <van-cell title="星球代码" :value="user.planetCode" />
-    <van-cell title="用户标签" is-link :value="user.tags" />
-  </template>
-  
-  <script setup lang="ts">
-  import {UserType} from "../models/user";
-  import {useRouter} from "vue-router";
-  
-  const router = useRouter();
-  
-  const user: UserType = {
-    id: 1,
-    username: "oswin",
-    userAccount: "oswin501",
-    avatarUrl: "https://miro.medium.com/v2/resize:fit:640/format:webp/1*4j2A9niz0eq-mRaCPUffpg.png",
-    gender: 1,  // 若1则男，若0则女
-    phone: "15534340089",
-    email: "oswin501@gmail.com",
-    createTime: new Date(),
-    userRole: 1,
-    planetCode: "nn00000001",
-    tags: ["java", "cpp"],
-  };
-  user.gender = user.gender === 1 ? '男' : '女';
-  user.userRole = user.userRole === 1 ? '管理员' : '普通用户';
-  
-  // 编辑用户信息 路由传参
-  const toEdit = (editKey: string, editName: string, currentValue: number | string | undefined) => {
-    router.push({
-      path: "/user/edit",
-      query: {editKey, editName, currentValue,},
-    })
-  }
-  
-  </script>
-  
-  <style scoped>
-  
-  </style>
-  ```
-  
-- src/pages/UserEditPage.vue
-
-  ```vue
-  <template>
-    <!--https://vant-ui.github.io/vant/v3/#/zh-CN/form-->
-    <van-form @submit="onSubmit">
-      <van-cell-group inset>
-        <van-field
-            v-model="editUser.currentValue"
-            :name="editUser.editKey"
-            :label="editUser.editName"
-            :placeholder="`请输入${editUser.editName}`"
-            :rules="[{ required: true, message: '请填写用户性别' }]"
-        />
-      </van-cell-group>
-      <div style="margin: 16px;">
-        <van-button round block type="primary" native-type="submit">
-          确认修改
-        </van-button>
-      </div>
-    </van-form>
-  </template>
-  
-  <script setup lang="ts">
-  import {useRoute, useRouter} from "vue-router";
-  import {ref} from "vue";
-  
-  const router = useRouter();
-  const route = useRoute();
-  
-  // 取到路由参数
-  console.log(route.query)
-  
-  // 表单数据 对象定义
-  const editUser = ref({
-    editKey: route.query.editKey,
-    editName: route.query.editName,
-    currentValue: route.query.currentValue,
-  })
-  // editUser.value.currentValue = editUser.value.currentValue === "1" ? "男" : "女"
-  
-  const onSubmit = (values) => {
-    console.log('submit', values);  // { editKey: "gender", editName: "性别", currentValue: "1" }
-    // TODO：将editKey editName currentValue提交到后端
-  };
-  </script>
-  
-  <style scoped>
-  
-  </style>
-  ```
-
-  
-
-
-
-### 路由配置
-
-- 路由配置
-
-  src/config/route.ts
-  
-  ```typescript
-  import Index from "../pages/Index.vue";
-  import TeamPage from "../pages/TeamPage.vue";
-  import UserPage from "../pages/UserPage.vue";
-  import SearchPage from '../pages/SearchPage.vue';
-  import EditUserPage from "../pages/UserEditPage.vue";
-  
-  const routes = [
-      // page 1
-      {path: '/', component: Index},
-      {path: '/search', component: SearchPage},
-      // page 2
-      {path: '/team', component: TeamPage},
-      // page 3
-      {path: '/user', component: UserPage},
-      {path: '/user/edit', component: EditUserPage},
-  ]
-  
-  export default routes;
-  
-  ```
-  
-  
-
-
-
-### 类型约束
-
-- 类型约束
-
-  src/models/user.d.ts
-
-  ```typescript
-  /**
-   * 用户类型
-   */
-  export type UserType = {
-      id: number,
-      username?: string,
-      userAccount?: string,
-      avatarUrl?: string,
-      gender?: number,
-      phone?: string,
-      email?: string,
-      userStatus?: number,
-      createTime?: Date,
-      userRole?: number,
-      planetCode?: string,
-      tags?: string[],
-  };
-  
-  ```
-
-  
-
-
-
-## 后端初始化
-
-### 新建项目
-
-- 基于用户中心
-
-  ```bash
-  cp -r ../user-center/user-center-backend/ ./yupao-backend
-  cd yupao-backend/ && rm -rf .idea/ target/
-  
-  # 全局替换
-  # user-center-backend -> yupao-backend
-  # 启动类
-  # UserCenterBackendApplication -> YupaoBackendApplication
-  # 
-  # Ctrl+Shift+A -> Add Maven Projects
-  
-  ```
-  
-  
-
-
-
-### 依赖配置
-
-- 依赖配置
-
-  spring, mybatis, juit
-
-  mysql, redis
-
-  json
-
-  ```xml
-          <!-- https://mvnrepository.com/artifact/com.google.code.gson/gson -->
-          <dependency>
-              <groupId>com.google.code.gson</groupId>
-              <artifactId>gson</artifactId>
-              <version>2.8.9</version>
-          </dependency>
-  ```
-
-  swagger
-  
-  ```xml
-          <!-- swagger -->
-          <!-- https://mvnrepository.com/artifact/io.springfox/springfox-swagger2 -->
-          <dependency>
-              <groupId>io.springfox</groupId>
-              <artifactId>springfox-swagger2</artifactId>
-              <version>3.0.0</version>
-          </dependency>
-          <!-- https://mvnrepository.com/artifact/io.springfox/springfox-swagger-ui -->
-          <dependency>
-              <groupId>io.springfox</groupId>
-              <artifactId>springfox-swagger-ui</artifactId>
-              <version>3.0.0</version>
-          </dependency>
-  ```
-  
-  easyexcel
-  
-  ```xml
-          <!-- https://mvnrepository.com/artifact/com.alibaba/easyexcel -->
-          <dependency>
-              <groupId>com.alibaba</groupId>
-              <artifactId>easyexcel</artifactId>
-              <version>3.1.1</version>
-          </dependency>
-  ```
-  
-  
-
-
-
-### 配置文件
-
-- src/main/resources/application.yml
-
-  ```yml
-  spring:
-    profiles:
-      active: dev
-    application:
-      name: yupao-backend
-    # Database configuration
-    datasource:
-      driver-class-name: com.mysql.jdbc.Driver  # com.mysql.cj.jdbc.Driver
-      url: jdbc:mysql://localhost:3306/yupao
-      username: root
-      password: 123456
-    session:
-      timeout: 86400 # 1天的session过期时间
-  server:
-    port: 8080
-    servlet:
-      context-path: /api # 指定接口全局api前缀
-  
-  mybatis-plus:
-    configuration:
-      map-underscore-to-camel-case: false  # 字段转换
-      log-impl: org.apache.ibatis.logging.stdout.StdOutImpl # 日志输出
-    global-config:
-      db-config:
-        logic-delete-field: isDelete # 全局逻辑删除的实体字段名(since 3.3.0,配置后可以忽略不配置步骤2)
-        logic-delete-value: 1 # 逻辑已删除值(默认为 1)
-        logic-not-delete-value: 0 # 逻辑未删除值(默认为 0)
-  
-  ```
-
-  
-
-
-
-### 中间件配置
-
-- MySQL
-
-  ```bash
-  docker start mysql
-  docker exec -it mysql bash
-  mysql -uroot -p123456
-  
-  drop database if exists yupao;
-  create database if not exists yupao;
-  use yupao;
-  
-  ```
-
-  
-
-
-
-### 补全学习 ✔
-
-- 补习
-
-  Java8特性：lambda、stream、parallelStream流式处理、Optional可选类
-
-  MyBatisPlus：ORM 免SQL的API
-
-
-
-
-
-### 接口文档 ✔
-
-- 接口文档
-
-  写接口信息的文档 (前端 后端 项目负责人)
-
-  接口信息：请求参数、响应参数(错误码)、接口地址、接口名称、请求类型、请求格式、备注
-
-  文档作用：项目维护参考、开发联调介质、在线调试
-
-  实现方式：md笔记手写、自动化接口文档生成([`Swagger`](https://swagger.io/), `Postman`, `Apifox`, `Apipost`, `Eolink`)
-
-- 整合 Swagger Knife4j
-
-  引入依赖 -> 自定义Swagger配置项 -> 定义代码位置 (线上环境不要把接口全部暴露)
-
-- 向上环境不要暴露接口
-
-  
-
-
-
-## 前端页面 用户标签
-
-- 需求 (与后端联调)
-
-  搜索页
-
-  用户页、用户修改页
-  
-  
-  
-
-
-
-### 前端页面跳转传值 ✔
-
-- 跳转传值 (多种实现)
-
-  router.query：本质是url.searchParms，url后附加参数，传递的值长度有限
-
-  router.params：动态路由，参数量更少
-
-  vuex全局状态管理：搜索页将关键词塞到状态中，搜索结果页从状态中取值
-
-  prop：父子组件传值
-
-  
-
-
-
-### 页面和布局
-
-
-
-
-
-### 页面：搜索页
-
-- 组件选择
-
-  [Search](https://vant-ui.github.io/vant/v3/#/zh-CN/search), [Picker](https://vant-ui.github.io/vant/v3/#/zh-CN/picker), 
-
-- src/pages/SearchPage.vue
-
-  ```vue
-  
-  ```
-
-  
-
-
-
-### 组件 X
-
-### 组件 X
-
-### 前端请求
-
-
 
 
 
@@ -1562,14 +1200,6 @@
 
 
 
-### 分布式session登陆 ✔
-
-
-
-
-
-
-
 ### 代码生成 MyBatisX
 
 - Tag 不生成
@@ -1595,6 +1225,7 @@
           <result property="userRole" column="userRole" jdbcType="INTEGER"/>
           <result property="planetCode" column="planetCode" jdbcType="VARCHAR"/>
           <result property="tags" column="tags" jdbcType="VARCHAR"/>
+          <result property="profile" column="profile" jdbcType="VARCHAR"/>
       </resultMap>
   
       <sql id="Base_Column_List">
@@ -1603,22 +1234,26 @@
           avatarUrl,gender,userPassword,
           phone,email,userStatus,
           createTime,updateTime,isDelete,
-          userRole,planetCode,tags
+          userRole,planetCode,tags,profile
       </sql>
   ```
-
+  
   src/main/java/com/time1043/yupaobackend/model/domain/User.java
-
+  
   ```java
       /**
        * 用户标签 json
        */
       private String tags;
   
+      /**
+       * 用户简介
+       */
+      private String profile;
   ```
-
+  
   src/main/java/com/time1043/yupaobackend/service/impl/UserServiceImpl.java
-
+  
   ```java
       /**
        * 获取脱敏用户信息 (工具类)
@@ -1646,11 +1281,11 @@
           safetyUser.setUserStatus(originalUser.getUserStatus());
           safetyUser.setCreateTime(originalUser.getCreateTime());
           safetyUser.setTags(originalUser.getTags());
+          safetyUser.setProfile(originalUser.getProfile());
           return safetyUser;
       }
-  
   ```
-
+  
   
 
 
@@ -1684,7 +1319,7 @@
 
   ```java
       /**
-       * 根据标签搜索用户 (SQL)
+       * 根据标签搜索用户 (SQL) - SQL模糊匹配
        *
        * @param tagNameList 用户要拥有的标签列表
        * @return 用户列表
@@ -1713,7 +1348,7 @@
       }
   
       /**
-       * 根据标签搜索用户 (Memory)
+       * 根据标签搜索用户 (Memory) - 大小写不敏感
        *
        * @param tagNameList 用户要拥有的标签列表
        * @return 用户列表
@@ -1757,15 +1392,16 @@
   
               Set<String> tempTagNameSet = gson.fromJson(tagsStr, new TypeToken<Set<String>>() {
               }.getType());
+              tempTagNameSet = Optional.ofNullable(tempTagNameSet).orElse(new HashSet<>());  // db中tags字段可能为null  java8 Optional
+              tempTagNameSet = tempTagNameSet.stream().map(String::toLowerCase).collect(Collectors.toSet());  // tempTagNameSet 转化成小写
               for (String tagName : tagNameList) {
-                  if (!tempTagNameSet.contains(tagName)) {
+                  if (!tempTagNameSet.contains(tagName.toLowerCase())) {  // tagName 转化成小写  // 大小写不敏感
                       return false;
                   }
               }
               return true;
           }).map(this::getSafetyUser).collect(Collectors.toList());  // Java8 stream parallelStream  // 公共线程池 有未知风险
       }
-  
   ```
 
 - 工具类
@@ -1889,6 +1525,37 @@
 
 ### 接口访问层 (controller) ✔
 
+- src/main/java/com/time1043/yupaobackend/controller/UserController.java
+
+  ```java
+      /**
+       * 根据标签搜索用户
+       *
+       * @param tagNameList 标签列表
+       * @return 用户列表
+       */
+      @GetMapping("/search/tags")
+      public BaseResponse<List<User>> searchUserByTags(List<String> tagNameList) {
+          // controller层校验是否为空  service层校验是否合法
+          if (CollectionUtils.isEmpty(tagNameList)) {
+              throw new BusinessException(ErrorCode.PARAMS_ERROR);
+          }
+  
+          List<User> userList = userService.searchUsersByTagsByMemory(tagNameList);  // getSafetyUser
+          return ResultUtils.success(userList);
+      }
+  ```
+
+- 接口测试
+
+  ```bash
+  curl --location --request GET 'http://127.0.0.1:8002/api/user/search/tags?tagNameList=python,javascript' \
+  --header 'User-Agent: Apifox/1.0.0 (https://apifox.com)'
+  
+  ```
+
+  
+
 
 
 ### 数据模型 (model)
@@ -1896,6 +1563,897 @@
 ### 自定义异常
 
 ### 测试接口
+
+
+
+
+
+### 分布式session登陆 ✔✔✔
+
+- 问题
+
+  服务器A登陆后，请求发到服务器B，不认识该用户？
+
+  原因：用户登陆信息session存在服务器A上，服务器B上没有
+
+  解决：用*公共存储*共享session (基于内存的KV存储Redis✔, 关系型数据库MySQL, 文件服务器Ceph) - 用户信息读取 判断是否登陆 *极其频繁*
+
+  ![](res/YuPao/login-session-share.png)
+
+- 后端应用分布式部署
+
+  ```bash
+  java -jar ./yupao-backend-0.0.1-SNAPSHOT.jar --server.port=8003
+  java -jar ./yupao-backend-0.0.1-SNAPSHOT.jar --server.port=8004
+  
+  ```
+
+  
+
+
+
+
+
+## 前端页面 用户标签
+
+- 需求 (请求后端)
+
+  搜索页
+
+  用户页、用户修改页
+
+  
+
+
+
+### 前端页面跳转传值
+
+- 跳转传值 (多种实现)
+
+  router.query：本质是url.searchParms，url后附加参数，传递的值长度有限
+
+  router.params：动态路由，参数量更少
+
+  vuex全局状态管理：搜索页将关键词塞到状态中，搜索结果页从状态中取值
+
+  prop：父子组件传值
+
+  
+
+
+
+### 基础布局 ✔
+
+- src/layouts/BasicLayout.vue
+
+  ```vue
+  <template>
+    <!-- 导航条 fixed="true" -->
+    <!-- https://vant-ui.github.io/vant/v3/#/zh-CN/nav-bar -->
+    <van-nav-bar
+        :title="title"
+        left-arrow
+        fixed
+        @click-left="onClickLeft"
+        @click-right="onClickRight"
+    >
+      <template #right>
+        <van-icon name="search" size="18"/>
+      </template>
+    </van-nav-bar>
+  
+    <!-- 中间内容：插槽/路由、或根据点击切换页面 -->
+    <!-- <slot name="content"></slot>-->
+    <div id="content">
+  
+      <!-- WAY1: v-if active -->
+      <!--
+      <template v-if="active === 'index'">
+        <Index/>
+      </template>
+      <template v-if="active === 'team'">
+        <Team/>
+      </template>
+      -->
+  
+      <!-- WAY2: Vue Router -->
+      <RouterView/>
+    </div>
+  
+    <!-- 底部栏 -->
+    <!-- https://vant-ui.github.io/vant/v3/#/zh-CN/tabbar -->
+    <!-- <van-tabbar route v-model="active" @change="onChange">-->
+    <van-tabbar route @change="onChange">
+      <van-tabbar-item icon="home-o" name="index" to="/">主页</van-tabbar-item>
+      <van-tabbar-item icon="search" name="team" to="/team">队伍</van-tabbar-item>
+      <van-tabbar-item icon="friends-o" name="user" to="/user">个人</van-tabbar-item>
+    </van-tabbar>
+  
+  </template>
+  
+  <script setup lang="ts">
+  import {useRouter} from "vue-router";
+  import {ref} from "vue";
+  import routes from "../config/route.ts";
+  
+  // Vue Router
+  const router = useRouter();
+  // 动态标题
+  const DEFAULT_TITLE = "伙伴匹配";
+  const title = ref(DEFAULT_TITLE);
+  
+  /**
+   * 根据路由切换标题
+   */
+  router.beforeEach((to, from) => {
+    const toPath = to.path;
+    const route = routes.find((route) => {
+      return toPath == route.path;
+    })
+    title.value = route?.title ?? DEFAULT_TITLE;
+  });
+  
+  // 导航条
+  const onClickLeft = () => {
+    // https://router.vuejs.org/zh/guide/essentials/navigation.html
+    router.back();
+  }
+  const onClickRight = () => {
+    // https://router.vuejs.org/zh/guide/essentials/navigation.html
+    router.push('/search');
+  }
+  
+  // 底部栏
+  // const active = ref("index");
+  const onChange = (index) => console.log(index);
+  </script>
+  
+  <style scoped>
+  /* 设置导航条和底部栏的高度 */
+  .van-nav-bar {
+    height: 46px;
+  }
+  
+  .van-tabbar {
+    height: 50px;
+  }
+  
+  /* 设置 #content 的高度，使其占满剩余空间 */
+  #content {
+    height: calc(100vh - 46px - 50px);
+    width: 100%;
+  }
+  </style>
+  
+  ```
+
+  
+
+
+
+### 页面：首页(用户列表页) ✔
+
+- src/pages/Index.vue
+
+  ```vue
+  <template>
+    首页
+  </template>
+  
+  <script setup lang="ts">
+  
+  </script>
+  
+  <style scoped>
+  
+  </style>
+  ```
+
+  
+
+
+
+### 页面：搜索页 ✔
+
+- src/pages/SearchPage.vue
+
+  ```vue
+  <template>
+    <!-- 搜索框 -->
+    <!-- https://vant-ui.github.io/vant/v3/#/zh-CN/search -->
+    <form action="/">
+      <van-search
+          v-model="searchText"
+          show-action
+          placeholder="请输入搜索标签"
+          @search="onSearch"
+          @cancel="onCancel"
+      />
+    </form>
+  
+    <div style="height: calc(100vh - 200px); overflow: auto">
+      <!-- 标签列表 -->
+      <!-- https://vant-ui.github.io/vant/v3/#/zh-CN/tag -->
+      <!-- https://vant-ui.github.io/vant/v3/#/zh-CN/divider -->
+      <!-- https://vant-ui.github.io/vant/v3/#/zh-CN/collapse -->
+      <!-- https://vant-ui.github.io/vant/v3/#/zh-CN/tree-select -->
+      <van-divider dashed>已选标签</van-divider>
+      <div v-if="activeIds.length === 0" style="font-size: 12px; text-align: center">请选择标签...</div>
+      <div style="padding: 0 20px">
+        <van-tag size="small" type="primary"
+                 closeable @close="doClose(tag)"
+                 v-for="tag in activeIds"
+                 style="margin-right: 5px; margin-bottom: 3px; padding: 4px; font-size: 11px;">
+          {{ tag }}
+        </van-tag>
+      </div>
+  
+      <van-divider dashed>选择标签</van-divider>
+      <van-tree-select
+          v-model:active-id="activeIds"
+          v-model:main-active-index="activeIndex"
+          :items="tagList"
+          height="72%"
+      />
+    </div>
+  
+    <!-- 搜索按钮 -->
+    <!-- https://vant-ui.github.io/vant/v3/#/zh-CN/button -->
+    <van-button type="primary" size="large" @click="doSearchResult" style="position: absolute; bottom: 50px">
+      搜索伙伴
+    </van-button>
+  </template>
+  
+  <script setup lang="ts">
+  import {ref} from 'vue';
+  import {useRouter} from "vue-router";
+  
+  const router = useRouter();
+  
+  // 选择标签 分类选择
+  const activeIds = ref([]);
+  const activeIndex = ref(0);
+  
+  /**
+   * 标签列表 封装响应式
+   */
+  const originTagList = [
+    {
+      text: '语言',
+      children: [
+        {text: 'Java', id: 'Java'},
+        {text: 'Python', id: 'Python'},
+        {text: 'JavaScript', id: 'JavaScript'},
+        {text: 'TypyScript', id: 'TypyScript'},
+        {text: 'PHP', id: 'PHP'},
+        {text: 'C++', id: 'C++'},
+        {text: 'C#', id: 'C#'},
+        {text: 'Go', id: 'Go'},
+        {text: 'Kotlin', id: 'Kotlin'},
+        {text: 'Swift', id: 'Swift'},
+        {text: 'Bug', id: 'Bug', disabled: true},
+      ],
+    },
+    {
+      text: '正在学',
+      children: [
+        {text: 'Vue', id: '正在学Vue'},
+        {text: 'React', id: '正在学React'},
+        {text: 'Angular', id: '正在学Angular'},
+        {text: 'Flutter', id: '正在学Flutter'},
+        {text: 'Node.js', id: 'Node.正在学js'},
+        {text: 'SpringBoot', id: '正在学SpringBoot'},
+        {text: 'SpringCloud', id: '正在学SpringCloud'},
+        {text: 'Langchain', id: '正在学Langchain'},
+        {text: 'Unity', id: '正在学Unity'},
+        {text: 'Nothing', id: 'Nothing', disabled: true},
+      ]
+    },
+    {
+      text: '段位',
+      children: [
+        {text: '学会一门语言', id: '学会一门语言'},
+        {text: '学会一个框架', id: '学会一个框架'},
+        {text: '独立开发前后端', id: '独立开发前后端'},
+        {text: '架构设计与优化', id: '架构设计与优化'},
+        {text: '入门AI算法', id: '入门AI算法'},
+        {text: '入门游戏开发', id: '入门游戏开发'}
+      ]
+    },
+    {
+      text: '身份',
+      children: [
+        {text: '小学鸡', id: '小学鸡'},
+        {text: '中学生', id: '中学生'},
+        {text: '大学生', id: '大学生'},
+        {text: '研究生', id: '研究生'},
+        {text: '家里蹲', id: '家里蹲'},
+        {text: '已就业', id: '已就业'},
+        {text: '已退休', id: '已退休'}
+      ]
+    }
+  ];
+  let tagList = ref(originTagList);
+  
+  /**
+   * 搜索过滤
+   * @param val
+   */
+  const onSearch = (val) => {
+    // 抽出标签列表 打平  // 过滤
+    tagList.value = originTagList.map(parentTag => {
+      const tempChildren = [...parentTag.children];
+      const tempParentTag = {...parentTag};
+      tempParentTag.children = tempChildren.filter(item => item.text.includes(searchText.value));
+      console.log(typeof tempParentTag)
+      console.log(tempParentTag)
+  
+      // TODO
+      activeIndex.value = 1;
+      return tempParentTag;
+    });
+  }
+  
+  // 搜索框
+  const searchText = ref('');
+  const onCancel = () => {
+    searchText.value = '';
+    tagList.value = originTagList;
+  }
+  
+  // 标签列表 删除标签
+  const doClose = (tag) => {
+    activeIds.value = activeIds.value.filter(item => {
+      return item !== tag;
+    })
+  }
+  
+  /**
+   * 搜索按钮 用户列表
+   */
+  const doSearchResult = () => {
+    // // 数据为空 不让搜索
+    // if (activeIds.value.length === 0) {
+    //   return;
+    // }
+  
+    // http://localhost:5173/#/user/list?tags=%E7%94%B7&tags=Python
+    router.push({
+      path: "/user/list",
+      query: {
+        tags: activeIds.value
+      }
+    })
+  }
+  
+  </script>
+  
+  <style scoped>
+  
+  </style>
+  ```
+
+  
+
+
+
+### 页面：搜索结果(用户列表页) ✔
+
+- src/pages/UserList.vue
+
+  ```vue
+  <template>
+    <!-- 展示用户列表 -->
+    <!-- https://vant-ui.github.io/vant/v3/#/zh-CN/card -->
+    <div style="margin-bottom: 50px;">
+  
+      <van-card
+          v-for="(user, index) in userList"
+          :key="index"
+          :title="user.username"
+          :desc="user.profile || '交个朋友吧 ~'"
+          :thumb="user.avatarUrl"
+          :tag="user.gender === 1? '♂' : '♀'"
+      >
+        <template #tags>
+          <template v-if="!user.tags || (Array.isArray(user.tags) && user.tags.length === 0)">
+            <van-tag plain type="danger"
+                     style="margin-right: 5px; margin-bottom: 3px; padding: 4px; font-size: 11px;">
+              TODO
+            </van-tag>
+          </template>
+  
+          <template v-else>
+            <van-tag size="small" type="primary" plain
+                     v-for="tag in user.tags"
+                     style="margin-right: 5px; margin-bottom: 3px; padding: 4px; font-size: 11px;">
+              {{ tag }}
+            </van-tag>
+          </template>
+        </template>
+        <template #footer>
+          <van-button size="mini">联系我</van-button>
+        </template>
+      </van-card>
+    </div>
+  </template>
+  
+  <script setup lang="ts">
+  import {useRoute} from "vue-router";
+  import {ref} from "vue";
+  import {UserType} from "../models/user";
+  
+  const route = useRoute();
+  
+  const mockUsers = [
+    {
+      id: 1,
+      username: "oswin",
+      userAccount: "oswin501",
+      avatarUrl: "https://miro.medium.com/v2/resize:fit:640/format:webp/1*4j2A9niz0eq-mRaCPUffpg.png",
+      gender: 1,
+      phone: "15534340089",
+      email: "oswin501@gmail.com",
+      userRole: 1,
+      planetCode: "nn00000001",
+      tags: [
+        "java", "python", "cpp", "rust",
+        "独立开发前后端", "正在学spring", "正在学react", "正在学langchain",
+        "竞赛", "苏州", "家里蹲", "没心没肺", "小学鸡"
+      ],
+      profile: "我是一名程序员，热爱编程，喜欢分享。",
+    },
+    {
+      id: 2,
+      username: "liuzhen",
+      userAccount: "liuzhen501",
+      avatarUrl: "https://miro.medium.com/v2/resize:fit:640/format:webp/0*1Og_hmJWdlMiDWuB.png",
+      gender: 0,
+      phone: "15534340089",
+      email: "liuzhen501@gmail.com",
+      userRole: 1,
+      planetCode: "nn00000001",
+      // tags: ["python", "java", "happy"]
+      profile: "",
+    },
+  ];
+  
+  const {tags} = route.query;  // Array<string> // TODO
+  const userList = ref<UserType[]>(mockUsers);  // Array<UserType>  ref
+  
+  </script>
+  
+  <style scoped>
+  
+  </style>
+  ```
+
+  
+
+
+
+
+### 页面：团队页 ✔✔✔
+
+- src/pages/Team.vue
+
+  ```vue
+  <template>
+    队伍页面
+  </template>
+  
+  <script setup lang="ts">
+  
+  </script>
+  
+  <style scoped>
+  
+  </style>
+  ```
+
+  
+
+
+
+
+### 页面：个人页 修改页 ✔
+
+- src/pages/UserPage.vue
+
+  ```vue
+  <template>
+    <!-- https://vant-ui.github.io/vant/v3/#/zh-CN/cell -->
+    <van-cell title="头像" title-style="text-align:left; ">
+      <van-image :src="user.avatarUrl" fit="cover" width="40" height="40"/>
+    </van-cell>
+    <van-cell title="账号" :value="user.userAccount" />
+    <van-cell title="角色" :value="user.userRole" />
+  
+    <van-cell title="用户名" is-link :value="user.username"
+              @click="toEdit('username','用户名', user.username)"/>
+    <van-cell title="性别" is-link :value="user.gender"
+              @click="toEdit('gender','性别', user.gender as number )"/>
+    <van-cell title="手机号" is-link :value="user.phone"
+              @click="toEdit('phone','手机号', user.phone)"/>
+    <van-cell title="邮箱" is-link :value="user.email"
+              @click="toEdit('email','邮箱', user.email)"/>
+  
+    <van-cell title="创建时间" :value="user.createTime?.toISOString()" />
+    <van-cell title="星球代码" :value="user.planetCode" />
+    <van-cell title="用户标签" is-link :value="user.tags" />
+  </template>
+  
+  <script setup lang="ts">
+  import {UserType} from "../models/user";
+  import {useRouter} from "vue-router";
+  
+  const router = useRouter();
+  
+  const user: UserType = {
+    id: 1,
+    username: "oswin",
+    userAccount: "oswin501",
+    avatarUrl: "https://miro.medium.com/v2/resize:fit:640/format:webp/1*4j2A9niz0eq-mRaCPUffpg.png",
+    gender: 1,  // 若1则男，若0则女
+    phone: "15534340089",
+    email: "oswin501@gmail.com",
+    createTime: new Date(),
+    userRole: 1,
+    planetCode: "nn00000001",
+    tags: ["java", "cpp"],
+  };
+  user.gender = user.gender === 1 ? '男' : '女';
+  user.userRole = user.userRole === 1 ? '管理员' : '普通用户';
+  
+  // 编辑用户信息 路由传参
+  const toEdit = (editKey: string, editName: string, currentValue: number | string | undefined) => {
+    router.push({
+      path: "/user/edit",
+      query: {editKey, editName, currentValue,},
+    })
+  }
+  
+  </script>
+  
+  <style scoped>
+  
+  </style>
+  ```
+
+- src/pages/UserEditPage.vue
+
+  ```vue
+  <template>
+    <!--https://vant-ui.github.io/vant/v3/#/zh-CN/form-->
+    <van-form @submit="onSubmit">
+      <van-cell-group inset>
+        <van-field
+            v-model="editUser.currentValue"
+            :name="editUser.editKey"
+            :label="editUser.editName"
+            :placeholder="`请输入${editUser.editName}`"
+            :rules="[{ required: true, message: '请填写用户性别' }]"
+        />
+      </van-cell-group>
+      <div style="margin: 16px;">
+        <van-button round block type="primary" native-type="submit">
+          确认修改
+        </van-button>
+      </div>
+    </van-form>
+  </template>
+  
+  <script setup lang="ts">
+  import {useRoute, useRouter} from "vue-router";
+  import {ref} from "vue";
+  
+  const router = useRouter();
+  const route = useRoute();
+  
+  // 取到路由参数
+  console.log(route.query)
+  
+  // 表单数据 对象定义
+  const editUser = ref({
+    editKey: route.query.editKey,
+    editName: route.query.editName,
+    currentValue: route.query.currentValue,
+  })
+  // editUser.value.currentValue = editUser.value.currentValue === "1" ? "男" : "女"
+  
+  const onSubmit = (values) => {
+    console.log('submit', values);  // { editKey: "gender", editName: "性别", currentValue: "1" }
+    // TODO：将editKey editName currentValue提交到后端
+  };
+  </script>
+  
+  <style scoped>
+  
+  </style>
+  ```
+
+  
+
+
+
+### 路由配置
+
+- 路由配置
+
+  src/config/route.ts
+
+  ```typescript
+  import Index from "../pages/Index.vue";
+  import TeamPage from "../pages/TeamPage.vue";
+  import UserPage from "../pages/UserPage.vue";
+  import SearchPage from '../pages/SearchPage.vue';
+  import EditUserPage from "../pages/UserEditPage.vue";
+  
+  const routes = [
+      // page 1
+      {path: '/', component: Index},
+      {path: '/search', component: SearchPage},
+      // page 2
+      {path: '/team', component: TeamPage},
+      // page 3
+      {path: '/user', component: UserPage},
+      {path: '/user/edit', component: EditUserPage},
+  ]
+  
+  export default routes;
+  
+  ```
+
+  
+
+
+
+### 类型约束
+
+- 类型约束
+
+  src/models/user.d.ts
+
+  ```typescript
+  /**
+   * 用户类型
+   */
+  export type UserType = {
+      id: number,
+      username?: string,
+      userAccount?: string,
+      avatarUrl?: string,
+      gender?: number | string,
+      phone?: string,
+      email?: string,
+      userStatus?: number | string,
+      createTime?: Date,
+      userRole?: number | string,
+      planetCode?: string,
+      tags?: string[],
+      profile?: string,
+  };
+  
+  ```
+
+  
+
+
+
+## 前后端联调 用户标签
+
+### 前端整合axios
+
+- 前端axios请求后端 [用例](https://axios-http.com/zh/docs/example) 
+
+  src/plugins/myAxois.ts
+
+  ```typescript
+  import axios, {AxiosInstance} from 'axios';
+  
+  // const isDev = process.env.NODE_ENV === 'development';
+  const myAxios: AxiosInstance = axios.create({
+      // baseURL: isDev? 'http://localhost:8002/api' : 'https://47.47.47.47:8002/api',
+      baseURL: 'http://localhost:8002/api'
+  });
+  myAxios.defaults.withCredentials = true;
+  
+  
+  // https://axios-http.com/zh/docs/interceptors
+  // 添加请求拦截器
+  axios.interceptors.request.use(function (config) {
+      // 在发送请求之前做些什么
+      console.log('Axios Request Interceptor: ', config)
+      return config;
+  }, function (error) {
+      // 对请求错误做些什么
+      console.log('Axios Request Interceptor[Error]: ', error)
+      return Promise.reject(error);
+  });
+  
+  
+  // 添加响应拦截器
+  axios.interceptors.response.use(function (response) {
+      // 2xx 范围内的状态码都会触发该函数。  // 对响应数据做点什么
+      console.log('Axios Response Interceptor: ', response)
+  
+      // // 未登录则跳转到登录页面
+      // if (response?.data?.code === 40100) {
+      //     const redirect = window.location.href;
+      //     window.location.href = `/user/login?redirect=${redirect}`;
+      // }
+  
+      return response;
+  }, function (error) {
+      // 超出 2xx 范围的状态码都会触发该函数。  // 对响应错误做点什么
+      console.log('Axios Response Interceptor[Error]: ', error)
+      return Promise.reject(error);
+  });
+  
+  export default myAxios;
+  ```
+
+  
+
+
+
+### 页面：搜索结果(用户列表页) ✔
+
+- src/pages/UserList.vue
+
+  ```vue
+  <template>
+    <!-- 展示用户列表 -->
+    <!-- https://vant-ui.github.io/vant/v3/#/zh-CN/card -->
+    <div style="margin-bottom: 50px;">
+      <van-card
+          v-for="(user, index) in userList"
+          :key="index"
+          :title="user.username"
+          :desc="user.profile || '交个朋友吧 ~'"
+          :thumb="user.avatarUrl"
+          :tag="user.gender === 1? '♂' : '♀'"
+      >
+        <template #tags>
+          <!-- user.tags为空时，显示todo标签 -->
+          <template v-if="!user.tags || (Array.isArray(user.tags) && user.tags.length === 0)">
+            <van-tag plain type="danger"
+                     style="margin-right: 5px; margin-bottom: 3px; padding: 4px; font-size: 11px;">
+              TODO
+            </van-tag>
+          </template>
+  
+          <!-- 另外渲染：user.tags取出一个标签，若该标签和tags中任何一个一样，则渲染该标签 -->
+          <template v-else>
+            <van-tag size="small" plain
+                     v-for="tag in user.tags"
+                     :type="isSpecialTag(tag) ? 'danger' : 'primary'"
+                     style="margin-right: 5px; margin-bottom: 3px; padding: 4px; font-size: 11px;">
+              {{ tag }}
+            </van-tag>
+          </template>
+        </template>
+  
+        <template #footer>
+          <van-button size="mini">联系我</van-button>
+        </template>
+      </van-card>
+    </div>
+  
+    <!-- 搜索条件为空时，提示用户无数据 -->
+    <!-- https://vant-ui.github.io/vant/v3/#/zh-CN/empty -->
+    <van-empty v-if="!userList || userList.length<1" description="暂无用户数据"/>
+  </template>
+  
+  <script setup lang="ts">
+  import {useRoute} from "vue-router";
+  import {onMounted, ref} from "vue";
+  import {UserType} from "../models/user";
+  import myAxios from "../plugins/myAxois.ts";
+  import qs from "qs";  // paramsSerializer
+  
+  const route = useRoute();
+  
+  /*const mockUsers = [
+    {
+      id: 1,
+      username: "oswin",
+      userAccount: "oswin501",
+      avatarUrl: "https://miro.medium.com/v2/resize:fit:640/format:webp/1*4j2A9niz0eq-mRaCPUffpg.png",
+      gender: 1,
+      phone: "15534340089",
+      email: "oswin501@gmail.com",
+      userRole: 1,
+      planetCode: "nn00000001",
+      tags: [
+        "java", "python", "cpp", "rust",
+        "独立开发前后端", "正在学spring", "正在学react", "正在学langchain",
+        "竞赛", "苏州", "家里蹲", "没心没肺", "小学鸡"
+      ],
+      profile: "我是一名程序员，热爱编程，喜欢分享。",
+    },
+    {
+      id: 2,
+      username: "liuzhen",
+      userAccount: "liuzhen501",
+      avatarUrl: "https://miro.medium.com/v2/resize:fit:640/format:webp/0*1Og_hmJWdlMiDWuB.png",
+      gender: 0,
+      phone: "15534340089",
+      email: "liuzhen501@gmail.com",
+      userRole: 1,
+      planetCode: "nn00000001",
+      // tags: ["python", "java", "happy"]
+      profile: "",
+    },
+  ];*/
+  
+  // const tags = route.query.tags;  // Array<string> // TODO  // SearchPage
+  const tags = Array.isArray(route.query.tags) ? route.query.tags : [route.query.tags];
+  console.log("tags: ", tags)  // Array [ "Java", "Python" ]
+  
+  const userList = ref<UserType[]>();  // Array<UserType>  ref  // Backend
+  // const userList = ref<UserType[]>(mockUsers);  // Array<UserType>  ref
+  
+  // console.log("=================================================================[userList1]")
+  // console.log(userList.value);
+  // console.log("=================================================================[tags]")
+  // console.log("tags: ", tags)
+  
+  /**
+   * 请求后端数据
+   */
+  onMounted(async () => {
+    // console.log("=================================================================[backend]")
+    // console.log("Requesting to backend...")
+    const userListData = await myAxios.get("/user/search/tags", {
+      params: {
+        tagNameList: tags,
+      },
+      // ?tagNameList[]=Java&tagNameList[]=Python -> ?tagNameList=Java&tagNameList=Python
+      paramsSerializer: (params) => {
+        return qs.stringify(params, {arrayFormat: "repeat"})
+      }
+    }).then(function (response) {
+      console.log("Got data from backend/user/search/tags[success]: ", response.data)
+      return response.data?.data;  // Array<UserType>
+    }).catch(function (error) {
+      console.log("Got data from backend/user/search/tags[error]: ", error);
+    })
+  
+    if (userListData) {
+      // '["python", "typyscript"]' -> ['python', 'typyscript']
+      userListData.forEach(user => {
+        if (user.tags) {
+          user.tags = JSON.parse(user.tags);
+        }
+      })
+      userList.value = userListData;
+  
+      // console.log("=================================================================[userList2]")
+      // console.log(userList.value);
+    }
+  })
+  
+  // 判断标签：若tags中有该标签，则渲染该标签
+  const isSpecialTag = (tag: string) => {
+    // console.log("Checking tag: ", tag, "...", tags.includes(tag.toLowerCase())); // 大小写不敏感
+    tags.forEach((tag, index) => {
+      tags[index] = tag.toLowerCase();
+    });
+    return tags.includes(tag);
+  };
+  </script>
+  
+  <style scoped>
+  
+  </style>
+  ```
+
+  
+
+ 
+
+### 页面：个人页 修改页 ✔
 
 
 

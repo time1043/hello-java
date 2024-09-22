@@ -59,15 +59,6 @@ const activeIndex = ref(0);
  */
 const originTagList = [
   {
-    text: '性别',
-    children: [
-      {text: '男', id: '男'},
-      {text: '女', id: '女'},
-      {text: 'Javaer', id: 'Javaer'},
-      {text: '未知', id: '未知', disabled: true},
-    ],
-  },
-  {
     text: '语言',
     children: [
       {text: 'Java', id: 'Java'},
@@ -80,9 +71,47 @@ const originTagList = [
       {text: 'Go', id: 'Go'},
       {text: 'Kotlin', id: 'Kotlin'},
       {text: 'Swift', id: 'Swift'},
-      {text: 'Bug', id: 'Bug'},
+      {text: 'Bug', id: 'Bug', disabled: true},
     ],
   },
+  {
+    text: '正在学',
+    children: [
+      {text: 'Vue', id: '正在学Vue'},
+      {text: 'React', id: '正在学React'},
+      {text: 'Angular', id: '正在学Angular'},
+      {text: 'Flutter', id: '正在学Flutter'},
+      {text: 'Node.js', id: 'Node.正在学js'},
+      {text: 'SpringBoot', id: '正在学SpringBoot'},
+      {text: 'SpringCloud', id: '正在学SpringCloud'},
+      {text: 'Langchain', id: '正在学Langchain'},
+      {text: 'Unity', id: '正在学Unity'},
+      {text: 'Nothing', id: 'Nothing', disabled: true},
+    ]
+  },
+  {
+    text: '段位',
+    children: [
+      {text: '学会一门语言', id: '学会一门语言'},
+      {text: '学会一个框架', id: '学会一个框架'},
+      {text: '独立开发前后端', id: '独立开发前后端'},
+      {text: '架构设计与优化', id: '架构设计与优化'},
+      {text: '入门AI算法', id: '入门AI算法'},
+      {text: '入门游戏开发', id: '入门游戏开发'}
+    ]
+  },
+  {
+    text: '身份',
+    children: [
+      {text: '小学鸡', id: '小学鸡'},
+      {text: '中学生', id: '中学生'},
+      {text: '大学生', id: '大学生'},
+      {text: '研究生', id: '研究生'},
+      {text: '家里蹲', id: '家里蹲'},
+      {text: '已就业', id: '已就业'},
+      {text: '已退休', id: '已退休'}
+    ]
+  }
 ];
 let tagList = ref(originTagList);
 
@@ -123,6 +152,11 @@ const doClose = (tag) => {
  * 搜索按钮 用户列表
  */
 const doSearchResult = () => {
+  // // 数据为空 不让搜索
+  // if (activeIds.value.length === 0) {
+  //   return;
+  // }
+
   // http://localhost:5173/#/user/list?tags=%E7%94%B7&tags=Python
   router.push({
     path: "/user/list",

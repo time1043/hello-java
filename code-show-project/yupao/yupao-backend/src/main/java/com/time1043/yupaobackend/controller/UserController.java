@@ -1,6 +1,7 @@
 package com.time1043.yupaobackend.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.time1043.yupaobackend.common.BaseResponse;
 import com.time1043.yupaobackend.common.ErrorCode;
 import com.time1043.yupaobackend.common.ResultUtils;
@@ -27,6 +28,7 @@ import static com.time1043.yupaobackend.contant.UserConstant.USER_LOGIN_STATE;
  */
 @RestController  // restful风格api  返回值默认json
 @RequestMapping("/user")
+//@CrossOrigin  // 允许跨域请求
 public class UserController {
 
     @Resource
@@ -143,5 +145,23 @@ public class UserController {
         Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
         User currentUser = (User) userObj;
         return currentUser != null && currentUser.getUserRole() == ADMIN_ROLE;
+    }
+
+
+    /**
+     * 根据标签搜索用户
+     *
+     * @param tagNameList 标签列表 (不必填 - 异常由开发者处理)
+     * @return 用户列表
+     */
+    @GetMapping("/search/tags")
+    public BaseResponse<List<User>> searchUserByTags(@RequestParam(required = false) List<String> tagNameList) {
+        // controller层校验是否为空  service层校验是否合法
+        if (CollectionUtils.isEmpty(tagNameList)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+
+        List<User> userList = userService.searchUsersByTagsByMemory(tagNameList);  // getSafetyUser
+        return ResultUtils.success(userList);
     }
 }

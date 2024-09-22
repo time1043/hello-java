@@ -6,6 +6,7 @@
 -- table
 -- ---------------------------------------------------
 -- 用户表
+drop table if exists user;
 create table user
 (
     username     varchar(256)                       null comment '用户昵称',
@@ -27,6 +28,7 @@ create table user
 ) comment '用户';
 
 -- 标签表（可以不创建，因为标签字段已经放到了用户表中）
+drop table if exists tag;
 create table tag
 (
     id         bigint auto_increment comment 'id' primary key,
@@ -45,30 +47,33 @@ create index idx_userId on tag (userId);
 -- ---------------------------------------------------
 -- data
 -- ---------------------------------------------------
+# password=12345678
 insert into user (username, useraccount, avatarurl, gender, userpassword, phone, email, userstatus,
                   createtime, updatetime, isdelete,
-                  userrole, planetCode, tags)
+                  userrole, planetCode, tags, profile)
 values ('oswin', 'oswin501',
         'https://miro.medium.com/v2/resize:fit:640/format:webp/1*4j2A9niz0eq-mRaCPUffpg.png', 1,
         'c9d21e89dc04f9f2b446b4fbdafdf4b8',
         '15534340089', 'oswin501@gmail.com', 0,
         current_timestamp, current_timestamp, 0,
-        1, 'nn00000001', '["java", "cpp"]'),
+        1, 'nn00000001',
+        '["java", "python", "javascript", "cpp", "rust", "独立开发前后端", "正在学springboot", "正在学react", "正在学langchain", "竞赛", "苏州", "家里蹲", "没心没肺", "小学鸡"]',
+        '我是一名程序员，热爱编程，喜欢分享。'),
        ('yupi', 'yupi501',
         'https://miro.medium.com/v2/resize:fit:640/format:webp/0*1Og_hmJWdlMiDWuB.png', 1,
         'c9d21e89dc04f9f2b446b4fbdafdf4b8',
         '15534340089', 'yupi501@gmail.com', 0,
         current_timestamp, current_timestamp, 0,
-        0, 'nn00000002', '["python", "javascript"]'),
+        0, 'nn00000002', '["python", "javascript"]', ''),
        ('yupi2', 'yupi502',
         'https://miro.medium.com/v2/resize:fit:640/format:webp/0*1Og_hmJWdlMiDWuB.png', 1,
         'c9d21e89dc04f9f2b446b4fbdafdf4b8',
         '15534340089', 'yupi501@gmail.com', 0,
         current_timestamp, current_timestamp, 1,
-        0, 'nn00000003', '["python", "javascript"]'),
+        0, 'nn00000003', '["python", "javascript"]', ''),
        ('yupi3', 'yupi503',
-        'https://miro.medium.com/v2/resize:fit:640/format:webp/0*1Og_hmJWdlMiDWuB.png', 1,
+        'https://miro.medium.com/v2/resize:fit:640/format:webp/0*1Og_hmJWdlMiDWuB.png', 0,
         'c9d21e89dc04f9f2b446b4fbdafdf4b8',
         '15534340089', 'yupi501@gmail.com', 1,
         current_timestamp, current_timestamp, 0,
-        0, 'nn00000004', '["python", "javascript"]');
+        0, 'nn00000004', '["python", "typescript"]', 'Heaven Sent, Hell Bent.');

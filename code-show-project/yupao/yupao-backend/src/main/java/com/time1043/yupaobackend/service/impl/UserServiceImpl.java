@@ -221,12 +221,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         safetyUser.setUserStatus(originalUser.getUserStatus());
         safetyUser.setCreateTime(originalUser.getCreateTime());
         safetyUser.setTags(originalUser.getTags());
+        safetyUser.setProfile(originalUser.getProfile());
         return safetyUser;
     }
 
 
     /**
-     * 根据标签搜索用户 (SQL)
+     * 根据标签搜索用户 (SQL) - SQL模糊匹配
      *
      * @param tagNameList 用户要拥有的标签列表
      * @return 用户列表
@@ -255,7 +256,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     }
 
     /**
-     * 根据标签搜索用户 (Memory)
+     * 根据标签搜索用户 (Memory) - 大小写不敏感
      *
      * @param tagNameList 用户要拥有的标签列表
      * @return 用户列表
@@ -300,8 +301,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             Set<String> tempTagNameSet = gson.fromJson(tagsStr, new TypeToken<Set<String>>() {
             }.getType());
             tempTagNameSet = Optional.ofNullable(tempTagNameSet).orElse(new HashSet<>());  // db中tags字段可能为null  java8 Optional
+            tempTagNameSet = tempTagNameSet.stream().map(String::toLowerCase).collect(Collectors.toSet());  // tempTagNameSet 转化成小写
             for (String tagName : tagNameList) {
-                if (!tempTagNameSet.contains(tagName)) {
+                if (!tempTagNameSet.contains(tagName.toLowerCase())) {  // tagName 转化成小写  // 大小写不敏感
                     return false;
                 }
             }
@@ -310,4 +312,3 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     }
 
 }
-
