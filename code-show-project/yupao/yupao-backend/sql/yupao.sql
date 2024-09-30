@@ -9,8 +9,8 @@
 drop table if exists user;
 create table user
 (
-    username     varchar(256)                       null comment '用户昵称',
     id           bigint auto_increment comment 'id' primary key,
+    username     varchar(256)                       null comment '用户昵称',
     userAccount  varchar(256)                       null comment '账号',
     avatarUrl    varchar(1024)                      null comment '用户头像',
     gender       tinyint                            null comment '性别',

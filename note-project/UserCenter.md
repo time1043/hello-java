@@ -400,6 +400,568 @@
 
 
 
+## 后端初始化
+
+- 项目规范
+
+  `controller ` (接收请求 封装接口给前端调用), `service` (业务逻辑), `mapper` (数据库操作)
+
+  `model.domain` (实体类对象), 全局变量常量, `contant` (枚举常量)
+
+  `utils`(工具类), 配置信息,
+
+- 速查流程
+
+  `Springboot Application` 加注解 @MapperScan
+
+  `application.yml` 配置信息
+
+  `pom.xml` 导入依赖baomidou 整合mybatis-plus
+
+  `MyBatisX` 操作：MyBatisX-Generator -> module path ->  annotation (MyBatis-Plus3) options (comment lombok actualColumn Model)  template (mybatis-plus3)
+
+- IDEA定义快捷方式
+
+  settings -> live template 
+
+  -> add group -> JavaCustom 
+
+  -> add template -> Abbreviation: ...; Description: ...; Template text: ...; Define: java
+
+  ```
+  rusc
+  Returns the successful packaging class
+  return ResultUtils.success($END$);
+  
+  ruerr
+  Returns the error wrapper class
+  return ResultUtils.error($END$);
+  
+  therr
+  throw new BusinessException($END$);
+  
+  ```
+
+  
+
+
+
+### 新建项目 vscode
+
+- vscode插件
+
+  `Extension Pack for Java`, `Spring Boot Extension Pack`
+
+- 创建流程
+
+  create java project 
+
+  -> springboot -> maven project 
+
+  -> maven -> 
+
+- 补充设置
+
+  settings -> proxy: http://1270.0.1:7890
+
+  settings -> spring-init (java version, default language, service url)
+
+  settings -> java.configuration.maven -> /opt/module/maven/conf/settings.xml (user settings, global settings)
+
+  settings -> maven.executable.path -> /opt/module/maven/bin/mvn
+
+  ```json
+  {
+    // save
+    "files.autoSave": "onFocusChange",
+    "editor.wordWrap": "on",
+    "editor.lineHeight": 20,
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": "explicit",
+      "source.organizeImports": "explicit"
+    },
+    // format
+    "[rust]": {
+      "editor.defaultFormatter": "rust-lang.rust-analyzer",
+      "editor.formatOnSave": true
+    },
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnPaste": true,
+    "editor.formatOnSave": true,
+    "editor.formatOnType": false,
+    "notebook.defaultFormatter": "esbenp.prettier-vscode",
+    // theme
+    "workbench.colorTheme": "1984 - Cyberpunk",
+    "workbench.iconTheme": "vscode-icons",
+  
+    // java maven spring
+    "java.configuration.maven.userSettings": "/opt/module/maven/conf/settings.xml",
+    "java.configuration.maven.globalSettings": "/opt/module/maven/conf/settings.xml",
+    "maven.executable.path": "/opt/module/maven/bin/mvn",
+    "maven.settingsFile": "/opt/module/maven/conf/settings.xml",
+    "spring.initializr.defaultJavaVersion": "8",
+    "spring.initializr.defaultLanguage": "Java",
+    "spring.initializr.defaultPackaging": "JAR",
+    "spring.initializr.defaultGroupId": "com.time1043",
+    "spring.initializr.serviceUrl": [
+      "https://start.aliyun.com/"
+      // "https://start.spring.io"
+    ]
+  }
+  
+  ```
+
+  
+
+
+
+### 新建项目
+
+- 集成开发工具：IDEA, webStorm (不需要其他)
+
+- 三种方式初始化后端
+
+  github上搜索springboot模板，拉现成的模板 (不推荐)
+
+  SpringBoot 官方模板生成器：https://start.spring.io/
+
+  集成开发工具IDEA (推荐✔)
+
+- spring初始java8项目
+
+  spring官方不再支持java8 https://start.spring.io
+
+  用阿里云提供的脚手架 https://start.aliyun.com/
+
+- 选择配置
+
+  springboot2.6.4 
+
+  springboot DevTools (热更新), spring configuration processor, spring web (web访问),
+
+  mysql, mybatis framework (数据访问层),
+
+  lombok (自动生成get set方法), junit (默认集成)
+
+- 框架整合  [mybatisplus docs](https://baomidou.com/pages/226c21/)
+
+  ```bash
+  mv src/main/resources/application.properties src/main/resources/application.yml
+  
+  rm -rf src/main/resources/static/  # 前后端不分离
+  cd src/main/java/com/time1043/usercenterbackend/ 
+  mkdir controller service mapper model contant utils common  # springboot项目结构
+  touch src/main/java/com/time1043/usercenterbackend/common/BaseResponse.java
+  
+  # mybatis-x
+  # localhost:8080/api/index.html
+  
+  ```
+
+  
+
+
+
+### 中间件 mysql
+
+- mysql
+
+  ```bash
+  # docker mysql8
+  mkdir -p /opt/data/mysql/data /opt/data/mysql/conf /opt/data/mysql/init  # rz -E
+  
+  docker run -d \
+    --name mysql \
+    -p 3306:3306 \
+    -e TZ=Asia/Shanghai \
+    -e MYSQL_ROOT_PASSWORD=123456 \
+    -v /opt/data/mysql/data:/var/lib/mysql \
+    -v /opt/data/mysql/conf:/etc/mysql/conf.d \
+    -v /opt/data/mysql/init:/docker-entrypoint-initdb.d \
+    mysql:8
+  
+  docker exec -it mysql bash
+  mysql -uroot -p123456
+  
+  
+  # docker mysql57
+  docker create --name mysql57 \
+    -e MYSQL_ROOT_PASSWORD=123456 \
+    -p 3307:3306 \
+    mysql:5.7
+  
+  docker start mysql57
+  docker exec -it mysql57 bash
+  mysql -uroot -p123456
+  
+  ```
+
+  
+
+
+
+### mybatis-plus demo
+
+- 框架整合  [mybatisplus docs](https://baomidou.com/pages/226c21/)
+
+  ```bash
+  # #################################################
+  # 
+  # #################################################
+  
+  # 依赖 pom.xml
+  # 配置文件 application.yml
+  
+  # 启动类 Application.java  @MapperScan
+  # model mapper
+  # 测试类
+  
+  ```
+
+  pom.xml
+
+  ```xml
+          <!-- mybatis-plus baomidou -->
+          <dependency>
+              <groupId>com.baomidou</groupId>
+              <artifactId>mybatis-plus-boot-starter</artifactId>
+              <version>3.5.1</version>
+          </dependency>
+  
+          <!-- https://mvnrepository.com/artifact/junit/junit -->
+          <dependency>
+              <groupId>junit</groupId>
+              <artifactId>junit</artifactId>
+              <version>4.13.2</version>
+              <scope>test</scope>
+          </dependency>
+  
+  ```
+
+- 编码
+
+  src/main/java/com/time1043/usercenterbackend/UserCenterBackendApplication.java
+
+  ```java
+  package com.time1043.usercenterbackend;
+  
+  import org.mybatis.spring.annotation.MapperScan;
+  import org.springframework.boot.SpringApplication;
+  import org.springframework.boot.autoconfigure.SpringBootApplication;
+  
+  @SpringBootApplication
+  @MapperScan("com.time1043.usercenterbackend.mapper")
+  public class UserCenterBackendApplication {
+  
+      public static void main(String[] args) {
+          SpringApplication.run(UserCenterBackendApplication.class, args);
+      }
+  
+  }
+  
+  ```
+
+  src/main/java/com/time1043/usercenterbackend/model/User.java
+
+  ```java
+  package com.time1043.usercenterbackend.model;
+  
+  import lombok.Data;
+  
+  @Data
+  public class User {
+      private Long id;
+      private String name;
+      private Integer age;
+      private String email;
+  }
+  ```
+
+  src/main/java/com/time1043/usercenterbackend/mapper/UserMapper.java
+
+  ```java
+  package com.time1043.usercenterbackend.mapper;
+  
+  import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+  import com.time1043.usercenterbackend.model.User;
+  
+  public interface UserMapper extends BaseMapper<User> {
+  
+  }
+  ```
+
+- 测试
+
+  src/test/java/com/time1043/usercenterbackend/UserCenterBackendApplicationTests.java (与启动类名一致)
+
+  ```java
+  package com.time1043.usercenterbackend;
+  
+  import com.time1043.usercenterbackend.mapper.UserMapper;
+  import com.time1043.usercenterbackend.model.User;
+  import org.junit.Assert;
+  import org.junit.jupiter.api.Test;
+  import org.springframework.boot.test.context.SpringBootTest;
+  
+  import javax.annotation.Resource;
+  import java.util.List;
+  
+  @SpringBootTest  // @SpringBootTest({"UserCenterBackendApplication"})
+  class UserCenterBackendApplicationTests {
+      @Resource
+      private UserMapper userMapper;
+  
+      @Test
+      void contextLoads() {
+          System.out.println(("----- selectAll method test ------"));
+          List<User> userList = userMapper.selectList(null);
+          Assert.assertEquals(5, userList.size());
+          userList.forEach(System.out::println);
+      }
+  }
+  
+  ```
+
+  src/test/java/com/time1043/usercenterbackend/SampleTest.java (与启动类名不一致)
+
+  添加@RunWith 
+
+  ```java
+  package com.time1043.usercenterbackend;
+  
+  import com.time1043.usercenterbackend.mapper.UserMapper;
+  import com.time1043.usercenterbackend.model.User;
+  import org.junit.Assert;
+  import org.junit.Test;
+  import org.junit.runner.RunWith;
+  import org.springframework.boot.test.context.SpringBootTest;
+  import org.springframework.test.context.junit4.SpringRunner;
+  
+  import javax.annotation.Resource;
+  import java.util.List;
+  
+  @SpringBootTest
+  @RunWith(SpringRunner.class)  // junit与springboot联系
+  public class SampleTest {
+      @Resource
+      private UserMapper userMapper;
+  
+      @Test  // org.junit.Test
+      public void testSelect() {
+          System.out.println(("----- selectAll method test ------"));
+          List<User> userList = userMapper.selectList(null);
+          Assert.assertEquals(5, userList.size());
+          userList.forEach(System.out::println);
+      }
+  }
+  
+  ```
+
+  不用@RunWith 
+
+  ```java
+  package com.time1043.usercenterbackend;
+  
+  import com.time1043.usercenterbackend.mapper.UserMapper;
+  import com.time1043.usercenterbackend.model.User;
+  import org.junit.Assert;
+  import org.junit.jupiter.api.Test;
+  import org.springframework.boot.test.context.SpringBootTest;
+  
+  import javax.annotation.Resource;
+  import java.util.List;
+  
+  @SpringBootTest
+  public class SampleTest {
+      @Resource
+      private UserMapper userMapper;
+  
+      @Test  // org.junit.jupiter.api.Test
+      public void testSelect() {
+          System.out.println(("----- selectAll method test ------"));
+          List<User> userList = userMapper.selectList(null);
+          Assert.assertEquals(5, userList.size());
+          userList.forEach(System.out::println);
+      }
+  }
+  
+  ```
+
+  
+
+
+
+
+### 项目配置 ✔
+
+- 逻辑删除配置 [MyBatis-Plus docs](https://baomidou.com/pages/6b03c5/#使用方法)
+
+  src\main\resources\application.yml
+
+  ```yml
+  spring:
+    application:
+      name: user-center-backend
+    # Database configuration
+    datasource:
+      driver-class-name: com.mysql.jdbc.Driver
+      url: jdbc:mysql://localhost:3306/user_center
+      username: root
+      password: 123456
+    session:
+      timeout: 86400 # 1天的session过期时间
+  server:
+    port: 8080
+    servlet:
+      context-path: /api # 指定接口全局api前缀
+  
+  mybatis-plus:
+    configuration:
+      map-underscore-to-camel-case: false  # 字段转换
+    global-config:
+      db-config:
+        logic-delete-field: isDelete # 全局逻辑删除的实体字段名(since 3.3.0,配置后可以忽略不配置步骤2)
+        logic-delete-value: 1 # 逻辑已删除值(默认为 1)
+        logic-not-delete-value: 0 # 逻辑未删除值(默认为 0)
+  
+  ```
+
+  
+
+
+
+### 依赖配置 ✔
+
+- pom.xml
+
+  ```xml
+  <?xml version="1.0" encoding="UTF-8"?>
+  <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+      <modelVersion>4.0.0</modelVersion>
+      <groupId>com.time1043</groupId>
+      <artifactId>user-center-backend</artifactId>
+      <version>0.0.1-SNAPSHOT</version>
+      <name>user-center-backend</name>
+      <description>Demo project for Spring Boot</description>
+      <properties>
+          <java.version>8</java.version>
+          <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+          <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+          <spring-boot.version>2.6.13</spring-boot.version>
+      </properties>
+      <dependencies>
+  
+          <dependency>
+              <groupId>org.springframework.boot</groupId>
+              <artifactId>spring-boot-starter-actuator</artifactId>
+          </dependency>
+  
+          <dependency>
+              <groupId>org.springframework.boot</groupId>
+              <artifactId>spring-boot-starter-web</artifactId>
+          </dependency>
+          <dependency>
+              <groupId>org.mybatis.spring.boot</groupId>
+              <artifactId>mybatis-spring-boot-starter</artifactId>
+              <version>2.2.2</version>
+          </dependency>
+  
+          <dependency>
+              <groupId>org.springframework.boot</groupId>
+              <artifactId>spring-boot-devtools</artifactId>
+              <scope>runtime</scope>
+              <optional>true</optional>
+          </dependency>
+          <dependency>
+              <groupId>com.mysql</groupId>
+              <artifactId>mysql-connector-j</artifactId>
+              <scope>runtime</scope>
+          </dependency>
+          <dependency>
+              <groupId>org.springframework.boot</groupId>
+              <artifactId>spring-boot-configuration-processor</artifactId>
+              <optional>true</optional>
+          </dependency>
+          <dependency>
+              <groupId>org.projectlombok</groupId>
+              <artifactId>lombok</artifactId>
+              <optional>true</optional>
+          </dependency>
+          <dependency>
+              <groupId>org.springframework.boot</groupId>
+              <artifactId>spring-boot-starter-test</artifactId>
+              <scope>test</scope>
+          </dependency>
+  
+          <!-- mybatis-plus baomidou -->
+          <dependency>
+              <groupId>com.baomidou</groupId>
+              <artifactId>mybatis-plus-boot-starter</artifactId>
+              <version>3.5.1</version>
+          </dependency>
+  
+          <!-- https://mvnrepository.com/artifact/junit/junit -->
+          <dependency>
+              <groupId>junit</groupId>
+              <artifactId>junit</artifactId>
+              <version>4.13.2</version>
+              <scope>test</scope>
+          </dependency>
+  
+      </dependencies>
+      <dependencyManagement>
+          <dependencies>
+              <dependency>
+                  <groupId>org.springframework.boot</groupId>
+                  <artifactId>spring-boot-dependencies</artifactId>
+                  <version>${spring-boot.version}</version>
+                  <type>pom</type>
+                  <scope>import</scope>
+              </dependency>
+          </dependencies>
+      </dependencyManagement>
+  
+      <build>
+          <plugins>
+              <plugin>
+                  <groupId>org.apache.maven.plugins</groupId>
+                  <artifactId>maven-compiler-plugin</artifactId>
+                  <version>3.8.1</version>
+                  <configuration>
+                      <source>8</source>
+                      <target>8</target>
+                      <encoding>UTF-8</encoding>
+                  </configuration>
+              </plugin>
+              <plugin>
+                  <groupId>org.springframework.boot</groupId>
+                  <artifactId>spring-boot-maven-plugin</artifactId>
+                  <version>${spring-boot.version}</version>
+                  <configuration>
+                      <mainClass>com.time1043.usercenterbackend.UserCenterBackendApplication</mainClass>
+                      <skip>true</skip>
+                  </configuration>
+                  <executions>
+                      <execution>
+                          <id>repackage</id>
+                          <goals>
+                              <goal>repackage</goal>
+                          </goals>
+                      </execution>
+                  </executions>
+              </plugin>
+          </plugins>
+      </build>
+  
+  </project>
+  
+  ```
+
+  
+
+
+
 ## 前端初始化
 
 - 前端流水线 (布局 + 页面 + 组件)
@@ -571,1622 +1133,6 @@
   ```
   
   
-
-
-
-## 后端初始化
-
-- 项目规范
-
-  `controller ` (接收请求 封装接口给前端调用), `service` (业务逻辑), `mapper` (数据库操作)
-
-  `model.domain` (实体类对象), 全局变量常量, `contant` (枚举常量)
-
-  `utils`(工具类), 配置信息,
-
-- 速查流程
-
-  `Springboot Application` 加注解 @MapperScan
-
-  `application.yml` 配置信息
-
-  `pom.xml` 导入依赖baomidou 整合mybatis-plus
-
-  `MyBatisX` 操作：MyBatisX-Generator -> module path ->  annotation (MyBatis-Plus3) options (comment lombok actualColumn Model)  template (mybatis-plus3)
-
-- IDEA定义快捷方式
-
-  settings -> live template 
-
-  -> add group -> JavaCustom 
-
-  -> add template -> Abbreviation: ...; Description: ...; Template text: ...; Define: java
-
-  ```
-  rusc
-  Returns the successful packaging class
-  return ResultUtils.success($END$);
-  
-  ruerr
-  Returns the error wrapper class
-  return ResultUtils.error($END$);
-  
-  therr
-  throw new BusinessException($END$);
-  
-  ```
-  
-
-
-
-### 新建项目 vscode
-
-- vscode插件
-
-  `Extension Pack for Java`, `Spring Boot Extension Pack`
-  
-- 创建流程
-
-  create java project 
-  
-  -> springboot -> maven project 
-  
-  -> maven -> 
-  
-- 补充设置
-
-  settings -> proxy: http://1270.0.1:7890
-
-  settings -> spring-init (java version, default language, service url)
-
-  settings -> java.configuration.maven -> /opt/module/maven/conf/settings.xml (user settings, global settings)
-
-  settings -> maven.executable.path -> /opt/module/maven/bin/mvn
-
-  ```json
-  {
-    "files.autoSave": "onFocusChange",
-    "editor.wordWrap": "on",
-    "editor.formatOnSave": true,
-    "editor.lineHeight": 20,
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
-    "editor.codeActionsOnSave": {
-      "source.fixAll.eslint": true,
-      "source.organizeImports": true
-    },
-    "notebook.defaultFormatter": "esbenp.prettier-vscode",
-    "workbench.colorTheme": "1984 - Cyberpunk",
-    "workbench.iconTheme": "vscode-icons",
-    "java.configuration.maven.userSettings": "/opt/module/maven/conf/settings.xml",
-    "java.configuration.maven.globalSettings": "/opt/module/maven/conf/settings.xml",
-    "maven.executable.path": "/opt/module/maven/bin/mvn",
-    "maven.settingsFile": "/opt/module/maven/conf/settings.xml",
-    "spring.initializr.defaultJavaVersion": "8",
-    "spring.initializr.defaultLanguage": "Java",
-    "spring.initializr.defaultPackaging": "JAR",
-    "spring.initializr.defaultGroupId": "com.time1043",
-    "spring.initializr.serviceUrl": [
-      "https://start.aliyun.com/"
-      // "https://start.spring.io"
-    ]
-  }
-  
-  ```
-
-  
-
-
-
-### 新建项目
-
-- 集成开发工具：IDEA, webStorm (不需要其他)
-
-- 三种方式初始化后端
-
-  github上搜索springboot模板，拉现成的模板 (不推荐)
-
-  SpringBoot 官方模板生成器：https://start.spring.io/
-
-  集成开发工具IDEA (推荐✔)
-
-- spring初始java8项目
-
-  spring官方不再支持java8 https://start.spring.io
-
-  用阿里云提供的脚手架 https://start.aliyun.com/
-
-- 选择配置
-
-  springboot2.6.4 
-
-  springboot DevTools (热更新), spring configuration processor, spring web (web访问),
-
-  mysql, mybatis framework (数据访问层),
-
-  lombok (自动生成get set方法), junit (默认集成)
-
-- 框架整合  [mybatisplus docs](https://baomidou.com/pages/226c21/)
-
-  ```bash
-  mv src/main/resources/application.properties src/main/resources/application.yml
-  
-  rm -rf src/main/resources/static/  # 前后端不分离
-  cd src/main/java/com/time1043/usercenterbackend/ 
-  mkdir controller service mapper model contant utils common  # springboot项目结构
-  touch src/main/java/com/time1043/usercenterbackend/common/BaseResponse.java
-  
-  # mybatis-x
-  # localhost:8080/api/index.html
-  
-  ```
-  
-  
-
-
-
----
-
-- mysql
-
-  ```bash
-  # docker mysql8
-  mkdir -p /opt/data/mysql/data /opt/data/mysql/conf /opt/data/mysql/init  # rz -E
-  
-  docker run -d \
-    --name mysql \
-    -p 3306:3306 \
-    -e TZ=Asia/Shanghai \
-    -e MYSQL_ROOT_PASSWORD=123456 \
-    -v /opt/data/mysql/data:/var/lib/mysql \
-    -v /opt/data/mysql/conf:/etc/mysql/conf.d \
-    -v /opt/data/mysql/init:/docker-entrypoint-initdb.d \
-    mysql:8
-  
-  docker exec -it mysql bash
-  mysql -uroot -p123456
-  
-  
-  # docker mysql57
-  docker create --name mysql57 \
-    -e MYSQL_ROOT_PASSWORD=123456 \
-    -p 3307:3306 \
-    mysql:5.7
-  
-  docker start mysql57
-  docker exec -it mysql57 bash
-  mysql -uroot -p123456
-  
-  ```
-  
-  
-
-
-
-### mybatis-plus demo
-
-- 框架整合  [mybatisplus docs](https://baomidou.com/pages/226c21/)
-
-  ```bash
-  # #################################################
-  # 
-  # #################################################
-  
-  # 依赖 pom.xml
-  # 配置文件 application.yml
-  
-  # 启动类 Application.java  @MapperScan
-  # model mapper
-  # 测试类
-  
-  ```
-  
-  pom.xml
-  
-  ```xml
-          <!-- mybatis-plus baomidou -->
-          <dependency>
-              <groupId>com.baomidou</groupId>
-              <artifactId>mybatis-plus-boot-starter</artifactId>
-              <version>3.5.1</version>
-          </dependency>
-  
-          <!-- https://mvnrepository.com/artifact/junit/junit -->
-          <dependency>
-              <groupId>junit</groupId>
-              <artifactId>junit</artifactId>
-              <version>4.13.2</version>
-              <scope>test</scope>
-          </dependency>
-  
-  ```
-  
-- 编码
-
-  src/main/java/com/time1043/usercenterbackend/UserCenterBackendApplication.java
-  
-  ```java
-  package com.time1043.usercenterbackend;
-  
-  import org.mybatis.spring.annotation.MapperScan;
-  import org.springframework.boot.SpringApplication;
-  import org.springframework.boot.autoconfigure.SpringBootApplication;
-  
-  @SpringBootApplication
-  @MapperScan("com.time1043.usercenterbackend.mapper")
-  public class UserCenterBackendApplication {
-  
-      public static void main(String[] args) {
-          SpringApplication.run(UserCenterBackendApplication.class, args);
-      }
-  
-  }
-  
-  ```
-
-  src/main/java/com/time1043/usercenterbackend/model/User.java
-  
-  ```java
-  package com.time1043.usercenterbackend.model;
-  
-  import lombok.Data;
-  
-  @Data
-  public class User {
-      private Long id;
-      private String name;
-      private Integer age;
-      private String email;
-  }
-  ```
-
-  src/main/java/com/time1043/usercenterbackend/mapper/UserMapper.java
-  
-  ```java
-  package com.time1043.usercenterbackend.mapper;
-  
-  import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-  import com.time1043.usercenterbackend.model.User;
-  
-  public interface UserMapper extends BaseMapper<User> {
-  
-  }
-  ```
-
-- 测试
-  
-  src/test/java/com/time1043/usercenterbackend/UserCenterBackendApplicationTests.java (与启动类名一致)
-  
-  ```java
-  package com.time1043.usercenterbackend;
-  
-  import com.time1043.usercenterbackend.mapper.UserMapper;
-  import com.time1043.usercenterbackend.model.User;
-  import org.junit.Assert;
-  import org.junit.jupiter.api.Test;
-  import org.springframework.boot.test.context.SpringBootTest;
-  
-  import javax.annotation.Resource;
-  import java.util.List;
-  
-  @SpringBootTest  // @SpringBootTest({"UserCenterBackendApplication"})
-  class UserCenterBackendApplicationTests {
-      @Resource
-      private UserMapper userMapper;
-  
-      @Test
-      void contextLoads() {
-          System.out.println(("----- selectAll method test ------"));
-          List<User> userList = userMapper.selectList(null);
-          Assert.assertEquals(5, userList.size());
-          userList.forEach(System.out::println);
-      }
-  }
-  
-  ```
-
-  src/test/java/com/time1043/usercenterbackend/SampleTest.java (与启动类名不一致)
-  
-  添加@RunWith 
-  
-  ```java
-  package com.time1043.usercenterbackend;
-  
-  import com.time1043.usercenterbackend.mapper.UserMapper;
-  import com.time1043.usercenterbackend.model.User;
-  import org.junit.Assert;
-  import org.junit.Test;
-  import org.junit.runner.RunWith;
-  import org.springframework.boot.test.context.SpringBootTest;
-  import org.springframework.test.context.junit4.SpringRunner;
-  
-  import javax.annotation.Resource;
-  import java.util.List;
-  
-  @SpringBootTest
-  @RunWith(SpringRunner.class)  // junit与springboot联系
-  public class SampleTest {
-      @Resource
-      private UserMapper userMapper;
-  
-      @Test  // org.junit.Test
-      public void testSelect() {
-          System.out.println(("----- selectAll method test ------"));
-          List<User> userList = userMapper.selectList(null);
-          Assert.assertEquals(5, userList.size());
-          userList.forEach(System.out::println);
-      }
-  }
-  
-  ```
-  
-  不用@RunWith 
-  
-  ```java
-  package com.time1043.usercenterbackend;
-  
-  import com.time1043.usercenterbackend.mapper.UserMapper;
-  import com.time1043.usercenterbackend.model.User;
-  import org.junit.Assert;
-  import org.junit.jupiter.api.Test;
-  import org.springframework.boot.test.context.SpringBootTest;
-  
-  import javax.annotation.Resource;
-  import java.util.List;
-  
-  @SpringBootTest
-  public class SampleTest {
-      @Resource
-      private UserMapper userMapper;
-  
-      @Test  // org.junit.jupiter.api.Test
-      public void testSelect() {
-          System.out.println(("----- selectAll method test ------"));
-          List<User> userList = userMapper.selectList(null);
-          Assert.assertEquals(5, userList.size());
-          userList.forEach(System.out::println);
-      }
-  }
-  
-  ```
-  
-  
-
-
-
-
-### 项目配置 ✔
-
-- 逻辑删除配置 [MyBatis-Plus docs](https://baomidou.com/pages/6b03c5/#使用方法)
-
-  src\main\resources\application.yml
-
-  ```yml
-  spring:
-    application:
-      name: user-center-backend
-    # Database configuration
-    datasource:
-      driver-class-name: com.mysql.jdbc.Driver
-      url: jdbc:mysql://localhost:3306/user_center
-      username: root
-      password: 123456
-    session:
-      timeout: 86400 # 1天的session过期时间
-  server:
-    port: 8080
-    servlet:
-      context-path: /api # 指定接口全局api前缀
-  
-  mybatis-plus:
-    configuration:
-      map-underscore-to-camel-case: false  # 字段转换
-    global-config:
-      db-config:
-        logic-delete-field: isDelete # 全局逻辑删除的实体字段名(since 3.3.0,配置后可以忽略不配置步骤2)
-        logic-delete-value: 1 # 逻辑已删除值(默认为 1)
-        logic-not-delete-value: 0 # 逻辑未删除值(默认为 0)
-  
-  ```
-  
-  
-
-
-
-### 依赖配置 ✔
-
-- pom.xml
-
-  ```xml
-  <?xml version="1.0" encoding="UTF-8"?>
-  <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-           xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
-      <modelVersion>4.0.0</modelVersion>
-      <groupId>com.time1043</groupId>
-      <artifactId>user-center-backend</artifactId>
-      <version>0.0.1-SNAPSHOT</version>
-      <name>user-center-backend</name>
-      <description>Demo project for Spring Boot</description>
-      <properties>
-          <java.version>8</java.version>
-          <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-          <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-          <spring-boot.version>2.6.13</spring-boot.version>
-      </properties>
-      <dependencies>
-  
-          <dependency>
-              <groupId>org.springframework.boot</groupId>
-              <artifactId>spring-boot-starter-actuator</artifactId>
-          </dependency>
-  
-          <dependency>
-              <groupId>org.springframework.boot</groupId>
-              <artifactId>spring-boot-starter-web</artifactId>
-          </dependency>
-          <dependency>
-              <groupId>org.mybatis.spring.boot</groupId>
-              <artifactId>mybatis-spring-boot-starter</artifactId>
-              <version>2.2.2</version>
-          </dependency>
-  
-          <dependency>
-              <groupId>org.springframework.boot</groupId>
-              <artifactId>spring-boot-devtools</artifactId>
-              <scope>runtime</scope>
-              <optional>true</optional>
-          </dependency>
-          <dependency>
-              <groupId>com.mysql</groupId>
-              <artifactId>mysql-connector-j</artifactId>
-              <scope>runtime</scope>
-          </dependency>
-          <dependency>
-              <groupId>org.springframework.boot</groupId>
-              <artifactId>spring-boot-configuration-processor</artifactId>
-              <optional>true</optional>
-          </dependency>
-          <dependency>
-              <groupId>org.projectlombok</groupId>
-              <artifactId>lombok</artifactId>
-              <optional>true</optional>
-          </dependency>
-          <dependency>
-              <groupId>org.springframework.boot</groupId>
-              <artifactId>spring-boot-starter-test</artifactId>
-              <scope>test</scope>
-          </dependency>
-  
-          <!-- mybatis-plus baomidou -->
-          <dependency>
-              <groupId>com.baomidou</groupId>
-              <artifactId>mybatis-plus-boot-starter</artifactId>
-              <version>3.5.1</version>
-          </dependency>
-  
-          <!-- https://mvnrepository.com/artifact/junit/junit -->
-          <dependency>
-              <groupId>junit</groupId>
-              <artifactId>junit</artifactId>
-              <version>4.13.2</version>
-              <scope>test</scope>
-          </dependency>
-  
-      </dependencies>
-      <dependencyManagement>
-          <dependencies>
-              <dependency>
-                  <groupId>org.springframework.boot</groupId>
-                  <artifactId>spring-boot-dependencies</artifactId>
-                  <version>${spring-boot.version}</version>
-                  <type>pom</type>
-                  <scope>import</scope>
-              </dependency>
-          </dependencies>
-      </dependencyManagement>
-  
-      <build>
-          <plugins>
-              <plugin>
-                  <groupId>org.apache.maven.plugins</groupId>
-                  <artifactId>maven-compiler-plugin</artifactId>
-                  <version>3.8.1</version>
-                  <configuration>
-                      <source>8</source>
-                      <target>8</target>
-                      <encoding>UTF-8</encoding>
-                  </configuration>
-              </plugin>
-              <plugin>
-                  <groupId>org.springframework.boot</groupId>
-                  <artifactId>spring-boot-maven-plugin</artifactId>
-                  <version>${spring-boot.version}</version>
-                  <configuration>
-                      <mainClass>com.time1043.usercenterbackend.UserCenterBackendApplication</mainClass>
-                      <skip>true</skip>
-                  </configuration>
-                  <executions>
-                      <execution>
-                          <id>repackage</id>
-                          <goals>
-                              <goal>repackage</goal>
-                          </goals>
-                      </execution>
-                  </executions>
-              </plugin>
-          </plugins>
-      </build>
-  
-  </project>
-  
-  ```
-  
-  
-
-
-
-## 前端页面：用户模块
-
-### 核心入口
-
-- src/app.tsx 
-
-  初始化数据：获取当前用户
-
-  ```tsx
-  getInitialState() {
-      fetchUserInfo() {
-          const msg = await queryCurrentUser()
-          // 获取不到 则重定向登陆页面 history.push(loginPath);
-      }
-  }
-  
-  
-  onPageChange() {
-      // 如果是无需登录页面，放行
-      // 没有登陆 则重定向登陆页面 history.push(loginPath);
-  }
-  ```
-
-- src/access.ts
-
-  控制用户访问权限 (access语法弹)
-
-  ```typescript
-  /**
-   * @see https://umijs.org/docs/max/access#access
-   * */
-  export default function access(initialState: { currentUser?: API.CurrentUser } | undefined) {
-    const { currentUser } = initialState ?? {};
-    return {
-      canAdmin: currentUser && currentUser.userRole === 1,  // admin
-    };
-  }
-  
-  ```
-
-  
-
-
-
-### 页面：用户登陆
-
-- src/pages/User/Login/index.tsx
-
-  用户登陆、获取当前用户 (前端获取用户登录态)
-  
-  ```tsx
-  import {Footer} from '@/components';
-  import {login} from '@/services/ant-design-pro/api';
-  import {LockOutlined, UserOutlined,} from '@ant-design/icons';
-  import {LoginForm, ProFormCheckbox, ProFormText,} from '@ant-design/pro-components';
-  import {Helmet, history, useModel} from '@umijs/max';
-  import {Alert, message, Tabs} from 'antd';
-  import {createStyles} from 'antd-style';
-  import React, {useState} from 'react';
-  import {flushSync} from 'react-dom';
-  import Settings from '../../../../config/defaultSettings';
-  import {PLANET_LINK, SYSTEM_LOGO} from "@/constants";
-  
-  const useStyles = createStyles(({token}) => {
-    return {
-      action: {
-        marginLeft: '8px',
-        color: 'rgba(0, 0, 0, 0.2)',
-        fontSize: '24px',
-        verticalAlign: 'middle',
-        cursor: 'pointer',
-        transition: 'color 0.3s',
-        '&:hover': {
-          color: token.colorPrimaryActive,
-        },
-      },
-      lang: {
-        width: 42,
-        height: 42,
-        lineHeight: '42px',
-        position: 'fixed',
-        right: 16,
-        borderRadius: token.borderRadius,
-        ':hover': {
-          backgroundColor: token.colorBgTextHover,
-        },
-      },
-      container: {
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100vh',
-        overflow: 'auto',
-        backgroundImage:
-          "url('https://mdn.alipayobjects.com/yuyan_qk0oxh/afts/img/V-_oS6r-i7wAAAAAAAAAAAAAFl94AQBr')",
-        backgroundSize: '100% 100%',
-      },
-    };
-  });
-  const LoginMessage: React.FC<{
-    content: string;
-  }> = ({content}) => {
-    return (
-      <Alert
-        style={{
-          marginBottom: 24,
-        }}
-        message={content}
-        type="error"
-        showIcon
-      />
-    );
-  };
-  const Login: React.FC = () => {
-    const [userLoginState, setUserLoginState] = useState<API.LoginResult>({});
-    const [type, setType] = useState<string>('account');
-    const {initialState, setInitialState} = useModel('@@initialState');
-    const {styles} = useStyles();
-    const fetchUserInfo = async () => {
-      const userInfo = await initialState?.fetchUserInfo?.();
-      if (userInfo) {
-        flushSync(() => {
-          setInitialState((s) => ({
-            ...s,
-            currentUser: userInfo,
-          }));
-        });
-      }
-    };
-    const handleSubmit = async (values: API.LoginParams) => {
-      try {
-        // 登录
-        const user = await login({...values, type,});
-        if (user) {
-          const defaultLoginSuccessMessage = '登录成功！';
-          message.success(defaultLoginSuccessMessage);
-          await fetchUserInfo();
-          const urlParams = new URL(window.location.href).searchParams;
-          history.push(urlParams.get('redirect') || '/');
-          return;
-        }
-        // 如果失败去设置用户错误信息
-        console.log(user);
-        setUserLoginState(user);
-      } catch (error) {
-        const defaultLoginFailureMessage = '登录失败，请重试！';
-        console.log(error);
-        message.error(defaultLoginFailureMessage);
-      }
-    };
-    const {status, type: loginType} = userLoginState;
-    return (
-      <div className={styles.container}>
-        <Helmet>
-          <title>
-            {'登录'}- {Settings.title}
-          </title>
-        </Helmet>
-        <div
-          style={{
-            flex: '1',
-            padding: '32px 0',
-          }}
-        >
-          <LoginForm
-            contentStyle={{
-              minWidth: 280,
-              maxWidth: '75vw',
-            }}
-            logo={<img alt="logo" src={SYSTEM_LOGO}/>}
-            title="User Center From OSWIN"
-            subTitle={<a href={PLANET_LINK} target="_blank" rel="noopener noreferrer"> OSWIN: ALWAYS WIN </a>}
-            initialValues={{
-              autoLogin: true,
-            }}
-            onFinish={async (values) => {
-              await handleSubmit(values as API.LoginParams);
-            }}
-          >
-            <Tabs
-              activeKey={type}
-              onChange={setType}
-              centered
-              items={[
-                {
-                  key: 'account',
-                  label: '账户密码登录',
-                }
-              ]}
-            />
-  
-            {status === 'error' && loginType === 'account' && (
-              <LoginMessage content={'错误的账户和密码'}/>
-            )}
-            {type === 'account' && (
-              <>
-                <ProFormText
-                  name="userAccount"
-                  fieldProps={{
-                    size: 'large',
-                    prefix: <UserOutlined/>,
-                  }}
-                  placeholder={'请输入账户 ...'}
-                  rules={[
-                    {
-                      required: true,
-                      message: '账户是必填项！',
-                    },
-                  ]}
-                />
-                <ProFormText.Password
-                  name="userPassword"
-                  fieldProps={{
-                    size: 'large',
-                    prefix: <LockOutlined/>,
-                  }}
-                  placeholder={'请输入密码 ...'}
-                  rules={[
-                    {
-                      required: true,
-                      message: '密码是必填项！',
-                    },
-                  ]}
-                />
-              </>
-            )}
-  
-            <div
-              style={{
-                marginBottom: 24,
-              }}
-            >
-              <ProFormCheckbox noStyle name="autoLogin">
-                自动登录
-              </ProFormCheckbox>
-              <a
-                style={{
-                  float: 'right',
-                }}
-                href={'/user/register'}
-                rel="noreferrer"
-              >
-                用户注册
-              </a>
-            </div>
-          </LoginForm>
-        </div>
-        <Footer/>
-      </div>
-    );
-  };
-  export default Login;
-  
-  ```
-  
-  
-
-
-
-### 页面：用户注册
-
-- src/pages/User/Register/register.test.tsx
-
-  ```tsx
-  import {Footer} from '@/components';
-  import {register} from '@/services/ant-design-pro/api';
-  import {LockOutlined, UserOutlined,} from '@ant-design/icons';
-  import {LoginForm, ProFormCheckbox, ProFormText,} from '@ant-design/pro-components';
-  import {Helmet, history} from '@umijs/max';
-  import {message, Tabs} from 'antd';
-  import {createStyles} from 'antd-style';
-  import React, {useState} from 'react';
-  import Settings from '../../../../config/defaultSettings';
-  import {PLANET_LINK, SYSTEM_LOGO} from "@/constants";
-  
-  const useStyles = createStyles(({token}) => {
-    return {
-      action: {
-        marginLeft: '8px',
-        color: 'rgba(0, 0, 0, 0.2)',
-        fontSize: '24px',
-        verticalAlign: 'middle',
-        cursor: 'pointer',
-        transition: 'color 0.3s',
-        '&:hover': {
-          color: token.colorPrimaryActive,
-        },
-      },
-      lang: {
-        width: 42,
-        height: 42,
-        lineHeight: '42px',
-        position: 'fixed',
-        right: 16,
-        borderRadius: token.borderRadius,
-        ':hover': {
-          backgroundColor: token.colorBgTextHover,
-        },
-      },
-      container: {
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100vh',
-        overflow: 'auto',
-        backgroundImage:
-          "url('https://mdn.alipayobjects.com/yuyan_qk0oxh/afts/img/V-_oS6r-i7wAAAAAAAAAAAAAFl94AQBr')",
-        backgroundSize: '100% 100%',
-      },
-    };
-  });
-  
-  const Register: React.FC = () => {
-    const [type, setType] = useState<string>('account');
-    const {styles} = useStyles();
-  
-    // 表单提交
-    const handleSubmit = async (values: API.RegisterParams) => {
-  
-      // 简单校验: 密码和确认密码是否一致 类型和值都要一致 (必选项不用 长度不用)
-      const {userPassword, checkPassword} = values;
-      if (userPassword !== checkPassword) {
-        message.error('两次输入的密码不一致，请重新输入！');
-        return;
-      }
-  
-      try {
-        // 注册
-        const id = await register(values);
-        if (id > 0) {
-          const defaultRegisterSuccessMessage = '注册成功！';
-          message.success(defaultRegisterSuccessMessage);
-  
-          const urlParams = new URL(window.location.href).searchParams;
-          history.push(urlParams.get('redirect') || '/user/login');
-          return;
-        }
-      } catch (error) {
-        const defaultLoginFailureMessage = '注册失败，请重试！';
-        console.log(error);
-        message.error(defaultLoginFailureMessage);
-      }
-    };
-  
-    return (
-      <div className={styles.container}>
-        <Helmet>
-          <title>
-            {'注册'}- {Settings.title}
-          </title>
-        </Helmet>
-        <div
-          style={{
-            flex: '1',
-            padding: '32px 0',
-          }}
-        >
-          <LoginForm
-            // 提交按钮的字样
-            submitter={{
-              searchConfig: {submitText: '注册'}
-            }}
-            contentStyle={{
-              minWidth: 280,
-              maxWidth: '75vw',
-            }}
-            logo={<img alt="logo" src={SYSTEM_LOGO}/>}
-            title="User Center From OSWIN"
-            subTitle={<a href={PLANET_LINK} target="_blank" rel="noopener noreferrer"> OSWIN: ALWAYS WIN </a>}
-            initialValues={{
-              autoLogin: true,
-            }}
-            onFinish={async (values) => {
-              await handleSubmit(values as API.RegisterParams);
-            }}
-          >
-            <Tabs
-              activeKey={type}
-              onChange={setType}
-              centered
-              items={[
-                {
-                  key: 'account',
-                  label: '账户密码注册',
-                }
-              ]}
-            />
-  
-            {type === 'account' && (
-              <>
-                <ProFormText
-                  name="userAccount"
-                  fieldProps={{
-                    size: 'large',
-                    prefix: <UserOutlined/>,
-                  }}
-                  placeholder={'请输入账户 ...'}
-                  rules={[
-                    {
-                      required: true,
-                      message: '账户是必填项！',
-                    },
-                  ]}
-                />
-                <ProFormText.Password
-                  name="userPassword"
-                  fieldProps={{
-                    size: 'large',
-                    prefix: <LockOutlined/>,
-                  }}
-                  placeholder={'请输入密码 ...'}
-                  rules={[
-                    {
-                      required: true,
-                      message: '密码是必填项！',
-                    },
-                  ]}
-                />
-                <ProFormText.Password
-                  name="checkPassword"
-                  fieldProps={{
-                    size: 'large',
-                    prefix: <LockOutlined/>,
-                  }}
-                  placeholder={'请输入确认密码 ...'}
-                  rules={[
-                    {
-                      required: true,
-                      message: '确认密码是必填项！',
-                    },
-                  ]}
-                />
-                <ProFormText
-                  name="planetCode"
-                  fieldProps={{
-                    size: 'large',
-                    prefix: <UserOutlined/>,
-                  }}
-                  placeholder={'请输入星球编号 ...'}
-                  rules={[
-                    {
-                      required: true,
-                      message: '星球编号是必填项！',
-                    },
-                  ]}
-                />
-              </>
-            )}
-  
-            <div
-              style={{
-                marginBottom: 24,
-              }}
-            >
-              <ProFormCheckbox noStyle name="autoLogin">
-                自动登录
-              </ProFormCheckbox>
-              <a
-                style={{
-                  float: 'right',
-                }}
-                href={'/user/login'}
-                rel="noreferrer"
-              >
-                用户登陆
-              </a>
-            </div>
-          </LoginForm>
-        </div>
-        <Footer/>
-      </div>
-    );
-  };
-  export default Register;
-  
-  ```
-  
-  
-
-
-
-### 页面：用户管理
-
-- src/pages/Admin.tsx
-
-  TODO
-
-  ```tsx
-  import {PageContainer} from '@ant-design/pro-components';
-  import React, {PropsWithChildren} from 'react';
-  
-  const Admin: React.FC = (props: PropsWithChildren) => {
-    const {children} = props;
-    return (
-      <PageContainer content={' 这个页面只有 admin 权限才能查看'}>
-        {children}
-      </PageContainer>
-    );
-  };
-  export default Admin;
-  
-  ```
-
-- src/pages/Admin/UserManage/index.tsx
-
-  [高级表格](https://procomponents.ant.design/components/table)
-
-  ```tsx
-  import type {ActionType, ProColumns} from '@ant-design/pro-components';
-  import {ProTable, TableDropdown} from '@ant-design/pro-components';
-  import {Image} from 'antd';
-  import {useRef} from 'react';
-  import {searchUsers} from "@/services/ant-design-pro/api";
-  
-  export const waitTimePromise = async (time: number = 100) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve(true);
-      }, time);
-    });
-  };
-  
-  export const waitTime = async (time: number = 100) => {
-    await waitTimePromise(time);
-  };
-  
-  const columns: ProColumns<API.CurrentUser>[] = [
-    {
-      dataIndex: 'id',  // map
-      valueType: "indexBorder",
-      width: 48,
-    },
-    {
-      title: '用户名',  // 展示在前端页面
-      dataIndex: 'username',  // 对应后端的字段名
-      copyable: true, // 是否可复制
-      // ellipsis: true, // 是否自动省略
-      // tip: '这是一段提示信息', // 鼠标悬停提示信息
-    },
-    {
-      title: "用户账户",
-      dataIndex: 'userAccount',
-      copyable: true,
-    },
-    {
-      title: '头像',
-      dataIndex: 'avatarUrl',
-      render: (_, record) => (  // 渲染逻辑 (一格, 一行)
-        <div>
-          <Image src={record.avatarUrl} width={100} height={100} />
-        </div>
-      )
-    },
-    {
-      title: "性别",
-      dataIndex: 'gender',
-      valueEnum: {
-        0: {text: '女'},
-        1: {text: '男'},
-      }
-    },
-    {
-      title: "电话",
-      dataIndex: 'phone',
-      copyable: true,
-    },
-    {
-      title: "邮箱",
-      dataIndex: 'email',
-      copyable: true,
-    },
-    {
-      title: "状态",
-      dataIndex: 'userStatus',
-      valueEnum: {
-        0: {text: '正常状态', status: 'Default'},
-        1: {text: '非正常状态', status: 'Error'},
-      }
-    },
-    {
-      title: "角色",
-      dataIndex: "userRole",
-      valueType: "select",  // 声明类型 否则默认字符串
-      valueEnum: {
-        0: {text: '普通用户', status: 'Default'},
-        1: {text: '管理员', status: 'Success'},
-      }
-    },
-    {
-      title: "星球编号",
-      dataIndex: "planetCode"
-    },
-    {
-      title: "创建时间",
-      dataIndex: "createTime",
-      valueType: "dateTime",  // 声明类型 否则默认字符串
-    },
-    {
-      title: "操作",
-      dataIndex: "option",
-      render: (text, record, _, action) => [
-        <a key="editable" onClick={() => {
-          action?.startEditable?.(record.id);
-        }}>编辑</a>,
-        <a target="_blank" rel={"noopener noreferrer"} key="view">查看</a>,
-        <TableDropdown key={"actionGroup"} onSelect={() => action?.reload()} menus={[
-          {key: 'copy', name: '复制'},
-          {key: 'delete', name: '删除'},
-        ]}/>
-      ]
-    }
-  ];
-  
-  export default () => {
-    const actionRef = useRef<ActionType>();
-    return (
-      <ProTable<API.CurrentUser>
-        columns={columns}
-        actionRef={actionRef}
-        cardBordered
-        request={async (params, sort, filter) => {
-          console.log(sort, filter);
-          const userList = await searchUsers();
-          return {
-            data: userList
-          }
-        }}
-        editable={{
-          type: 'multiple',
-        }}
-        columnsState={{
-          persistenceKey: 'pro-table-singe-demos',
-          persistenceType: 'localStorage',
-          defaultValue: {
-            option: {fixed: 'right', disable: true},
-          },
-          onChange(value) {
-            console.log('value: ', value);
-          },
-        }}
-        rowKey="id"
-        search={{
-          labelWidth: 'auto',
-        }}
-        options={{
-          setting: {
-            listsHeight: 400,
-          },
-        }}
-        form={{
-          // 由于配置了 transform，提交的参数与定义的不同这里需要转化一下
-          syncToUrl: (values, type) => {
-            if (type === 'get') {
-              return {
-                ...values,
-                created_at: [values.startTime, values.endTime],
-              };
-            }
-            return values;
-          },
-        }}
-        pagination={{
-          pageSize: 5,
-          onChange: (page) => console.log(page),
-        }}
-        dateFormatter="string"
-        headerTitle="高级表格"
-      />
-    );
-  };
-  
-  ```
-  
-  
-
-
-
-### 组件：footer
-
-- src/components/Footer/index.tsx
-
-  ```tsx
-  import { GithubOutlined } from '@ant-design/icons';
-  import { DefaultFooter } from '@ant-design/pro-components';
-  import React from 'react';
-  import {PLANET_LINK} from "@/constants";
-  
-  const Footer: React.FC = () => {
-    const defaultMessage = 'From oswin';
-    const currentYear = new Date().getFullYear();
-  
-    return (
-      <DefaultFooter
-        copyright={`${currentYear} ${defaultMessage}`}
-        style={{
-          background: 'none',
-        }}
-        links={[
-          {
-            key: 'planet',
-            title: '知识星球',
-            href: PLANET_LINK,
-            blankTarget: true,
-          },
-          {
-            key: 'codeNav',
-            title: '编程导航',
-            href: 'https://www.code-nav.cn',
-            blankTarget: true,
-          },
-          {
-            key: 'github',
-            title: <><GithubOutlined/> oswin GitHub</>,
-            href: 'https://github.com/time1043',
-            blankTarget: true,
-          },
-  
-        ]}
-      />
-    );
-  };
-  
-  export default Footer;
-  
-  ```
-  
-  
-
-
-
-### 组件：AvatarDropdown
-
-- src/components/RightContent/AvatarDropdown.tsx
-
-  ```tsx
-  import { outLogin } from '@/services/ant-design-pro/api';
-  import { LogoutOutlined, SettingOutlined, UserOutlined } from '@ant-design/icons';
-  import { history, useModel } from '@umijs/max';
-  import { Spin } from 'antd';
-  import { createStyles } from 'antd-style';
-  import { stringify } from 'querystring';
-  import type { MenuInfo } from 'rc-menu/lib/interface';
-  import React, { useCallback } from 'react';
-  import { flushSync } from 'react-dom';
-  import HeaderDropdown from '../HeaderDropdown';
-  
-  export type GlobalHeaderRightProps = {
-    menu?: boolean;
-    children?: React.ReactNode;
-  };
-  
-  export const AvatarName = () => {
-    const { initialState } = useModel('@@initialState');
-    const { currentUser } = initialState || {};
-    return <span className="anticon">{currentUser?.username}</span>;
-  };
-  
-  const useStyles = createStyles(({ token }) => {
-    return {
-      action: {
-        display: 'flex',
-        height: '48px',
-        marginLeft: 'auto',
-        overflow: 'hidden',
-        alignItems: 'center',
-        padding: '0 8px',
-        cursor: 'pointer',
-        borderRadius: token.borderRadius,
-        '&:hover': {
-          backgroundColor: token.colorBgTextHover,
-        },
-      },
-    };
-  });
-  
-  export const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu, children }) => {
-    /**
-     * 退出登录，并且将当前的 url 保存
-     */
-    const loginOut = async () => {
-      await outLogin();
-      const { search, pathname } = window.location;
-      const urlParams = new URL(window.location.href).searchParams;
-      /** 此方法会跳转到 redirect 参数所在的位置 */
-      const redirect = urlParams.get('redirect');
-      // Note: There may be security issues, please note
-      if (window.location.pathname !== '/user/login' && !redirect) {
-        history.replace({
-          pathname: '/user/login',
-          search: stringify({
-            redirect: pathname + search,
-          }),
-        });
-      }
-    };
-    const { styles } = useStyles();
-  
-    const { initialState, setInitialState } = useModel('@@initialState');
-  
-    const onMenuClick = useCallback(
-      (event: MenuInfo) => {
-        const { key } = event;
-        if (key === 'logout') {
-          flushSync(() => {
-            setInitialState((s) => ({ ...s, currentUser: undefined }));
-          });
-          loginOut();
-          return;
-        }
-        history.push(`/account/${key}`);
-      },
-      [setInitialState],
-    );
-  
-    const loading = (
-      <span className={styles.action}>
-        <Spin
-          size="small"
-          style={{
-            marginLeft: 8,
-            marginRight: 8,
-          }}
-        />
-      </span>
-    );
-  
-    if (!initialState) {
-      return loading;
-    }
-  
-    const { currentUser } = initialState;
-  
-    if (!currentUser || !currentUser.username) {
-      return loading;
-    }
-  
-    const menuItems = [
-      ...(menu
-        ? [
-            {
-              key: 'center',
-              icon: <UserOutlined />,
-              label: '个人中心',
-            },
-            {
-              key: 'settings',
-              icon: <SettingOutlined />,
-              label: '个人设置',
-            },
-            {
-              type: 'divider' as const,
-            },
-          ]
-        : []),
-      {
-        key: 'logout',
-        icon: <LogoutOutlined />,
-        label: '退出登录',
-      },
-    ];
-  
-    return (
-      <HeaderDropdown
-        menu={{
-          selectedKeys: [],
-          onClick: onMenuClick,
-          items: menuItems,
-        }}
-      >
-        {children}
-      </HeaderDropdown>
-    );
-  };
-  
-  ```
-
-  
-
-
-
-### 前后端交互 (前端请求)
-
-- 前端向后端发请求
-
-  `ajax`前端请求后端
-
-  `axios`封装了ajax
-
-  `request`是ant design项目的再一次封装
-
-  
-
-
-
-### 前后端交互：登陆注册
-
-- 任务
-
-  用户登陆 (用户态信息)
-
-  获取当前用户
-
-
-
----
-
-- 登陆页面 src/pages/User/Login/index.tsx
-
-  onFinish
-
-  ```tsx
-          <LoginForm
-            onFinish={async (values) => {
-              await handleSubmit(values as API.LoginParams);
-            }}
-  
-  ```
-
-  handleSubmit
-
-  ```tsx
-    const handleSubmit = async (values: API.LoginParams) => {
-      try {
-        // 登录
-        const msg = await login({
-  ```
-
-  API.LoginParams (src/services/ant-design-pro/typings.d.ts)
-
-  ```typescript
-  declare namespace API {
-    // user/current
-    type CurrentUser = {
-      id: number,
-      username?: string,
-      userAccount?: string,
-      avatarUrl?: string,
-      gender?: number,
-      phone?: string,
-      email?: string,
-      userStatus?: number,
-      createTime?: Date,
-      userRole?: number,
-      planetCode?: string,
-    };
-  
-    // user/login
-    type LoginParams = {
-      userAccount?: string;
-      userPassword?: string;
-      autoLogin?: boolean;
-      type?: string;
-    };
-  
-    type LoginResult = {
-      status?: string;
-      type?: string;
-      currentAuthority?: string;
-    };
-  
-    // user/register
-    type RegisterParams = {
-      userAccount?: string;
-      userPassword?: string;
-      checkPassword?: string;
-      planetCode?: string;
-      type?: string;
-    };
-  
-    type RegisterResult = number;
-  ```
-
-- 发送请求
-
-  login (src/services/ant-design-pro/api.ts)
-
-  ```typescript
-  /** 登录接口 POST /api/user/login */
-  export async function login(body: API.LoginParams, options?: { [key: string]: any }) {
-    return request<API.LoginResult>('/api/user/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      data: body,
-      ...(options || {}),
-    });
-  }
-  
-  /** 注册接口 POST /api/user/register */
-  export async function register(body: API.RegisterParams, options?: { [key: string]: any }) {
-    return request<API.RegisterResult>('/api/user/register', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      data: body,
-      ...(options || {}),
-    });
-  }
-  
-  /** 获取当前的用户 GET /api/user/current */
-  export async function currentUser(options?: { [key: string]: any }) {
-    return request<API.CurrentUser>('/api/user/current', {
-      method: 'GET',
-      ...(options || {}),
-    });
-  }
-  
-  /** 退出登录接口 POST /api/user/logout */
-  export async function outLogin(options?: { [key: string]: any }) {
-    return request<Record<string, any>>('/api/user/logout', {
-      method: 'POST',
-      ...(options || {}),
-    });
-  }
-  
-  /** 搜索用户接口 GET /api/user/search */
-  export async function searchUsers(options?: { [key: string]: any }) {
-    return request<API.CurrentUser[]>('/api/user/search', {
-      method: 'GET',
-      ...(options || {}),
-    });
-  }
-  
-  ```
-  
-  
-
-
-
-### 跨域问题
-
-- 代理
-
-  正向代理：替客户端 向服务器发送请求
-
-  反向代理：替服务器 接收请求
-
-- 代理实现
-
-  nginx服务器、nodejs服务器
-
-- 简单实现
-
-  config/proxy.ts
-
-  ```typescript
-  export default {
-    // 如果需要自定义本地开发服务器  请取消注释按需调整
-    dev: {
-      // localhost:8000/api/** -> https://preview.pro.ant.design/api/**
-      '/api/': {
-        // 要代理的地址  // http !!!
-        target: 'http://localhost:8080',
-        // 配置了这个可以从 http 代理到 https
-        // 依赖 origin 的功能可能需要这个，比如 cookie
-        changeOrigin: true,
-      },
-    },
-  ```
-
-  ![](res/UserCenter/FrontendProxy.png)
-
-
 
 
 
@@ -3011,7 +1957,7 @@
 
 
 
-### POJO
+### POJO ✔✔✔
 
 - POJO (Plain Old Java Object)
 
@@ -3025,7 +1971,1119 @@
 
   BO (Business Object)：业务对象，表示业务逻辑层中的对象，包含*复杂的业务逻辑和状态*
 
+  ![](res/UserCenter/user-center.drawio.png)
+
   
+
+
+
+### 登录态 ✔✔✔
+
+- 需求
+
+  用户登陆后，保持登陆状态
+
+- Way0: Nature
+
+  -> 客户端将*用户名密码*传到服务端 服务端进行鉴权且认证成功
+
+  -> 服务端响应给客户端*用户名密码* 
+
+  ~ 麻烦 危险
+
+- Way1: Cookie
+
+  -> 客户端*登陆请求* 服务端进行鉴权且认证成功
+
+  -> 服务端响应给客户端*用户信息* 客户端*将其作为cookie保存在浏览器* 
+
+  ---> 后续请求自动带上cookie 
+
+  ~~ 客户端存储易被用户篡改 容量限制4k 用户可以禁用cookie
+
+- Way2: Session
+
+  -> 客户端*登陆请求* 服务端进行鉴权且认证成功 服务端*往session中存入用户信息* 
+
+  -> 服务端响应给客户端*sessionID* 客户端在cookie中存入sessionID
+
+  ---> 后续请求自动带上cookie(sessionID) 服务端进行鉴权 
+
+  ~~ 保存在服务端更安全 容量更大；占用服务端资源 分布式集群扩张性差 依赖cookie 跨域问题
+
+- Way3: Token (JWT)
+
+  加密后的字符串 不需要客户端和服务端任何存储
+
+  
+
+  
+
+
+
+## 前端页面：用户模块
+
+### 核心入口
+
+- src/app.tsx 
+
+  初始化数据：获取当前用户
+
+  ```tsx
+  getInitialState() {
+      fetchUserInfo() {
+          const msg = await queryCurrentUser()
+          // 获取不到 则重定向登陆页面 history.push(loginPath);
+      }
+  }
+  
+  
+  onPageChange() {
+      // 如果是无需登录页面，放行
+      // 没有登陆 则重定向登陆页面 history.push(loginPath);
+  }
+  ```
+
+- src/access.ts
+
+  控制用户访问权限 (access语法弹)
+
+  ```typescript
+  /**
+   * @see https://umijs.org/docs/max/access#access
+   * */
+  export default function access(initialState: { currentUser?: API.CurrentUser } | undefined) {
+    const { currentUser } = initialState ?? {};
+    return {
+      canAdmin: currentUser && currentUser.userRole === 1,  // admin
+    };
+  }
+  
+  ```
+
+  
+
+
+
+### 页面：用户登陆
+
+- src/pages/User/Login/index.tsx
+
+  用户登陆、获取当前用户 (前端获取用户登录态)
+
+  ```tsx
+  import {Footer} from '@/components';
+  import {login} from '@/services/ant-design-pro/api';
+  import {LockOutlined, UserOutlined,} from '@ant-design/icons';
+  import {LoginForm, ProFormCheckbox, ProFormText,} from '@ant-design/pro-components';
+  import {Helmet, history, useModel} from '@umijs/max';
+  import {Alert, message, Tabs} from 'antd';
+  import {createStyles} from 'antd-style';
+  import React, {useState} from 'react';
+  import {flushSync} from 'react-dom';
+  import Settings from '../../../../config/defaultSettings';
+  import {PLANET_LINK, SYSTEM_LOGO} from "@/constants";
+  
+  const useStyles = createStyles(({token}) => {
+    return {
+      action: {
+        marginLeft: '8px',
+        color: 'rgba(0, 0, 0, 0.2)',
+        fontSize: '24px',
+        verticalAlign: 'middle',
+        cursor: 'pointer',
+        transition: 'color 0.3s',
+        '&:hover': {
+          color: token.colorPrimaryActive,
+        },
+      },
+      lang: {
+        width: 42,
+        height: 42,
+        lineHeight: '42px',
+        position: 'fixed',
+        right: 16,
+        borderRadius: token.borderRadius,
+        ':hover': {
+          backgroundColor: token.colorBgTextHover,
+        },
+      },
+      container: {
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100vh',
+        overflow: 'auto',
+        backgroundImage:
+          "url('https://mdn.alipayobjects.com/yuyan_qk0oxh/afts/img/V-_oS6r-i7wAAAAAAAAAAAAAFl94AQBr')",
+        backgroundSize: '100% 100%',
+      },
+    };
+  });
+  const LoginMessage: React.FC<{
+    content: string;
+  }> = ({content}) => {
+    return (
+      <Alert
+        style={{
+          marginBottom: 24,
+        }}
+        message={content}
+        type="error"
+        showIcon
+      />
+    );
+  };
+  const Login: React.FC = () => {
+    const [userLoginState, setUserLoginState] = useState<API.LoginResult>({});
+    const [type, setType] = useState<string>('account');
+    const {initialState, setInitialState} = useModel('@@initialState');
+    const {styles} = useStyles();
+    const fetchUserInfo = async () => {
+      const userInfo = await initialState?.fetchUserInfo?.();
+      if (userInfo) {
+        flushSync(() => {
+          setInitialState((s) => ({
+            ...s,
+            currentUser: userInfo,
+          }));
+        });
+      }
+    };
+    const handleSubmit = async (values: API.LoginParams) => {
+      try {
+        // 登录
+        const user = await login({...values, type,});
+        if (user) {
+          const defaultLoginSuccessMessage = '登录成功！';
+          message.success(defaultLoginSuccessMessage);
+          await fetchUserInfo();
+          const urlParams = new URL(window.location.href).searchParams;
+          history.push(urlParams.get('redirect') || '/');
+          return;
+        }
+        // 如果失败去设置用户错误信息
+        console.log(user);
+        setUserLoginState(user);
+      } catch (error) {
+        const defaultLoginFailureMessage = '登录失败，请重试！';
+        console.log(error);
+        message.error(defaultLoginFailureMessage);
+      }
+    };
+    const {status, type: loginType} = userLoginState;
+    return (
+      <div className={styles.container}>
+        <Helmet>
+          <title>
+            {'登录'}- {Settings.title}
+          </title>
+        </Helmet>
+        <div
+          style={{
+            flex: '1',
+            padding: '32px 0',
+          }}
+        >
+          <LoginForm
+            contentStyle={{
+              minWidth: 280,
+              maxWidth: '75vw',
+            }}
+            logo={<img alt="logo" src={SYSTEM_LOGO}/>}
+            title="User Center From OSWIN"
+            subTitle={<a href={PLANET_LINK} target="_blank" rel="noopener noreferrer"> OSWIN: ALWAYS WIN </a>}
+            initialValues={{
+              autoLogin: true,
+            }}
+            onFinish={async (values) => {
+              await handleSubmit(values as API.LoginParams);
+            }}
+          >
+            <Tabs
+              activeKey={type}
+              onChange={setType}
+              centered
+              items={[
+                {
+                  key: 'account',
+                  label: '账户密码登录',
+                }
+              ]}
+            />
+  
+            {status === 'error' && loginType === 'account' && (
+              <LoginMessage content={'错误的账户和密码'}/>
+            )}
+            {type === 'account' && (
+              <>
+                <ProFormText
+                  name="userAccount"
+                  fieldProps={{
+                    size: 'large',
+                    prefix: <UserOutlined/>,
+                  }}
+                  placeholder={'请输入账户 ...'}
+                  rules={[
+                    {
+                      required: true,
+                      message: '账户是必填项！',
+                    },
+                  ]}
+                />
+                <ProFormText.Password
+                  name="userPassword"
+                  fieldProps={{
+                    size: 'large',
+                    prefix: <LockOutlined/>,
+                  }}
+                  placeholder={'请输入密码 ...'}
+                  rules={[
+                    {
+                      required: true,
+                      message: '密码是必填项！',
+                    },
+                  ]}
+                />
+              </>
+            )}
+  
+            <div
+              style={{
+                marginBottom: 24,
+              }}
+            >
+              <ProFormCheckbox noStyle name="autoLogin">
+                自动登录
+              </ProFormCheckbox>
+              <a
+                style={{
+                  float: 'right',
+                }}
+                href={'/user/register'}
+                rel="noreferrer"
+              >
+                用户注册
+              </a>
+            </div>
+          </LoginForm>
+        </div>
+        <Footer/>
+      </div>
+    );
+  };
+  export default Login;
+  
+  ```
+
+  
+
+
+
+### 页面：用户注册
+
+- src/pages/User/Register/register.test.tsx
+
+  ```tsx
+  import {Footer} from '@/components';
+  import {register} from '@/services/ant-design-pro/api';
+  import {LockOutlined, UserOutlined,} from '@ant-design/icons';
+  import {LoginForm, ProFormCheckbox, ProFormText,} from '@ant-design/pro-components';
+  import {Helmet, history} from '@umijs/max';
+  import {message, Tabs} from 'antd';
+  import {createStyles} from 'antd-style';
+  import React, {useState} from 'react';
+  import Settings from '../../../../config/defaultSettings';
+  import {PLANET_LINK, SYSTEM_LOGO} from "@/constants";
+  
+  const useStyles = createStyles(({token}) => {
+    return {
+      action: {
+        marginLeft: '8px',
+        color: 'rgba(0, 0, 0, 0.2)',
+        fontSize: '24px',
+        verticalAlign: 'middle',
+        cursor: 'pointer',
+        transition: 'color 0.3s',
+        '&:hover': {
+          color: token.colorPrimaryActive,
+        },
+      },
+      lang: {
+        width: 42,
+        height: 42,
+        lineHeight: '42px',
+        position: 'fixed',
+        right: 16,
+        borderRadius: token.borderRadius,
+        ':hover': {
+          backgroundColor: token.colorBgTextHover,
+        },
+      },
+      container: {
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100vh',
+        overflow: 'auto',
+        backgroundImage:
+          "url('https://mdn.alipayobjects.com/yuyan_qk0oxh/afts/img/V-_oS6r-i7wAAAAAAAAAAAAAFl94AQBr')",
+        backgroundSize: '100% 100%',
+      },
+    };
+  });
+  
+  const Register: React.FC = () => {
+    const [type, setType] = useState<string>('account');
+    const {styles} = useStyles();
+  
+    // 表单提交
+    const handleSubmit = async (values: API.RegisterParams) => {
+  
+      // 简单校验: 密码和确认密码是否一致 类型和值都要一致 (必选项不用 长度不用)
+      const {userPassword, checkPassword} = values;
+      if (userPassword !== checkPassword) {
+        message.error('两次输入的密码不一致，请重新输入！');
+        return;
+      }
+  
+      try {
+        // 注册
+        const id = await register(values);
+        if (id > 0) {
+          const defaultRegisterSuccessMessage = '注册成功！';
+          message.success(defaultRegisterSuccessMessage);
+  
+          const urlParams = new URL(window.location.href).searchParams;
+          history.push(urlParams.get('redirect') || '/user/login');
+          return;
+        }
+      } catch (error) {
+        const defaultLoginFailureMessage = '注册失败，请重试！';
+        console.log(error);
+        message.error(defaultLoginFailureMessage);
+      }
+    };
+  
+    return (
+      <div className={styles.container}>
+        <Helmet>
+          <title>
+            {'注册'}- {Settings.title}
+          </title>
+        </Helmet>
+        <div
+          style={{
+            flex: '1',
+            padding: '32px 0',
+          }}
+        >
+          <LoginForm
+            // 提交按钮的字样
+            submitter={{
+              searchConfig: {submitText: '注册'}
+            }}
+            contentStyle={{
+              minWidth: 280,
+              maxWidth: '75vw',
+            }}
+            logo={<img alt="logo" src={SYSTEM_LOGO}/>}
+            title="User Center From OSWIN"
+            subTitle={<a href={PLANET_LINK} target="_blank" rel="noopener noreferrer"> OSWIN: ALWAYS WIN </a>}
+            initialValues={{
+              autoLogin: true,
+            }}
+            onFinish={async (values) => {
+              await handleSubmit(values as API.RegisterParams);
+            }}
+          >
+            <Tabs
+              activeKey={type}
+              onChange={setType}
+              centered
+              items={[
+                {
+                  key: 'account',
+                  label: '账户密码注册',
+                }
+              ]}
+            />
+  
+            {type === 'account' && (
+              <>
+                <ProFormText
+                  name="userAccount"
+                  fieldProps={{
+                    size: 'large',
+                    prefix: <UserOutlined/>,
+                  }}
+                  placeholder={'请输入账户 ...'}
+                  rules={[
+                    {
+                      required: true,
+                      message: '账户是必填项！',
+                    },
+                  ]}
+                />
+                <ProFormText.Password
+                  name="userPassword"
+                  fieldProps={{
+                    size: 'large',
+                    prefix: <LockOutlined/>,
+                  }}
+                  placeholder={'请输入密码 ...'}
+                  rules={[
+                    {
+                      required: true,
+                      message: '密码是必填项！',
+                    },
+                  ]}
+                />
+                <ProFormText.Password
+                  name="checkPassword"
+                  fieldProps={{
+                    size: 'large',
+                    prefix: <LockOutlined/>,
+                  }}
+                  placeholder={'请输入确认密码 ...'}
+                  rules={[
+                    {
+                      required: true,
+                      message: '确认密码是必填项！',
+                    },
+                  ]}
+                />
+                <ProFormText
+                  name="planetCode"
+                  fieldProps={{
+                    size: 'large',
+                    prefix: <UserOutlined/>,
+                  }}
+                  placeholder={'请输入星球编号 ...'}
+                  rules={[
+                    {
+                      required: true,
+                      message: '星球编号是必填项！',
+                    },
+                  ]}
+                />
+              </>
+            )}
+  
+            <div
+              style={{
+                marginBottom: 24,
+              }}
+            >
+              <ProFormCheckbox noStyle name="autoLogin">
+                自动登录
+              </ProFormCheckbox>
+              <a
+                style={{
+                  float: 'right',
+                }}
+                href={'/user/login'}
+                rel="noreferrer"
+              >
+                用户登陆
+              </a>
+            </div>
+          </LoginForm>
+        </div>
+        <Footer/>
+      </div>
+    );
+  };
+  export default Register;
+  
+  ```
+
+  
+
+
+
+### 页面：用户管理
+
+- src/pages/Admin.tsx
+
+  TODO
+
+  ```tsx
+  import {PageContainer} from '@ant-design/pro-components';
+  import React, {PropsWithChildren} from 'react';
+  
+  const Admin: React.FC = (props: PropsWithChildren) => {
+    const {children} = props;
+    return (
+      <PageContainer content={' 这个页面只有 admin 权限才能查看'}>
+        {children}
+      </PageContainer>
+    );
+  };
+  export default Admin;
+  
+  ```
+
+- src/pages/Admin/UserManage/index.tsx
+
+  [高级表格](https://procomponents.ant.design/components/table)
+
+  ```tsx
+  import type {ActionType, ProColumns} from '@ant-design/pro-components';
+  import {ProTable, TableDropdown} from '@ant-design/pro-components';
+  import {Image} from 'antd';
+  import {useRef} from 'react';
+  import {searchUsers} from "@/services/ant-design-pro/api";
+  
+  export const waitTimePromise = async (time: number = 100) => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(true);
+      }, time);
+    });
+  };
+  
+  export const waitTime = async (time: number = 100) => {
+    await waitTimePromise(time);
+  };
+  
+  const columns: ProColumns<API.CurrentUser>[] = [
+    {
+      dataIndex: 'id',  // map
+      valueType: "indexBorder",
+      width: 48,
+    },
+    {
+      title: '用户名',  // 展示在前端页面
+      dataIndex: 'username',  // 对应后端的字段名
+      copyable: true, // 是否可复制
+      // ellipsis: true, // 是否自动省略
+      // tip: '这是一段提示信息', // 鼠标悬停提示信息
+    },
+    {
+      title: "用户账户",
+      dataIndex: 'userAccount',
+      copyable: true,
+    },
+    {
+      title: '头像',
+      dataIndex: 'avatarUrl',
+      render: (_, record) => (  // 渲染逻辑 (一格, 一行)
+        <div>
+          <Image src={record.avatarUrl} width={100} height={100} />
+        </div>
+      )
+    },
+    {
+      title: "性别",
+      dataIndex: 'gender',
+      valueEnum: {
+        0: {text: '女'},
+        1: {text: '男'},
+      }
+    },
+    {
+      title: "电话",
+      dataIndex: 'phone',
+      copyable: true,
+    },
+    {
+      title: "邮箱",
+      dataIndex: 'email',
+      copyable: true,
+    },
+    {
+      title: "状态",
+      dataIndex: 'userStatus',
+      valueEnum: {
+        0: {text: '正常状态', status: 'Default'},
+        1: {text: '非正常状态', status: 'Error'},
+      }
+    },
+    {
+      title: "角色",
+      dataIndex: "userRole",
+      valueType: "select",  // 声明类型 否则默认字符串
+      valueEnum: {
+        0: {text: '普通用户', status: 'Default'},
+        1: {text: '管理员', status: 'Success'},
+      }
+    },
+    {
+      title: "星球编号",
+      dataIndex: "planetCode"
+    },
+    {
+      title: "创建时间",
+      dataIndex: "createTime",
+      valueType: "dateTime",  // 声明类型 否则默认字符串
+    },
+    {
+      title: "操作",
+      dataIndex: "option",
+      render: (text, record, _, action) => [
+        <a key="editable" onClick={() => {
+          action?.startEditable?.(record.id);
+        }}>编辑</a>,
+        <a target="_blank" rel={"noopener noreferrer"} key="view">查看</a>,
+        <TableDropdown key={"actionGroup"} onSelect={() => action?.reload()} menus={[
+          {key: 'copy', name: '复制'},
+          {key: 'delete', name: '删除'},
+        ]}/>
+      ]
+    }
+  ];
+  
+  export default () => {
+    const actionRef = useRef<ActionType>();
+    return (
+      <ProTable<API.CurrentUser>
+        columns={columns}
+        actionRef={actionRef}
+        cardBordered
+        request={async (params, sort, filter) => {
+          console.log(sort, filter);
+          const userList = await searchUsers();
+          return {
+            data: userList
+          }
+        }}
+        editable={{
+          type: 'multiple',
+        }}
+        columnsState={{
+          persistenceKey: 'pro-table-singe-demos',
+          persistenceType: 'localStorage',
+          defaultValue: {
+            option: {fixed: 'right', disable: true},
+          },
+          onChange(value) {
+            console.log('value: ', value);
+          },
+        }}
+        rowKey="id"
+        search={{
+          labelWidth: 'auto',
+        }}
+        options={{
+          setting: {
+            listsHeight: 400,
+          },
+        }}
+        form={{
+          // 由于配置了 transform，提交的参数与定义的不同这里需要转化一下
+          syncToUrl: (values, type) => {
+            if (type === 'get') {
+              return {
+                ...values,
+                created_at: [values.startTime, values.endTime],
+              };
+            }
+            return values;
+          },
+        }}
+        pagination={{
+          pageSize: 5,
+          onChange: (page) => console.log(page),
+        }}
+        dateFormatter="string"
+        headerTitle="高级表格"
+      />
+    );
+  };
+  
+  ```
+
+  
+
+
+
+### 组件：footer
+
+- src/components/Footer/index.tsx
+
+  ```tsx
+  import { GithubOutlined } from '@ant-design/icons';
+  import { DefaultFooter } from '@ant-design/pro-components';
+  import React from 'react';
+  import {PLANET_LINK} from "@/constants";
+  
+  const Footer: React.FC = () => {
+    const defaultMessage = 'From oswin';
+    const currentYear = new Date().getFullYear();
+  
+    return (
+      <DefaultFooter
+        copyright={`${currentYear} ${defaultMessage}`}
+        style={{
+          background: 'none',
+        }}
+        links={[
+          {
+            key: 'planet',
+            title: '知识星球',
+            href: PLANET_LINK,
+            blankTarget: true,
+          },
+          {
+            key: 'codeNav',
+            title: '编程导航',
+            href: 'https://www.code-nav.cn',
+            blankTarget: true,
+          },
+          {
+            key: 'github',
+            title: <><GithubOutlined/> oswin GitHub</>,
+            href: 'https://github.com/time1043',
+            blankTarget: true,
+          },
+  
+        ]}
+      />
+    );
+  };
+  
+  export default Footer;
+  
+  ```
+
+  
+
+
+
+### 组件：AvatarDropdown
+
+- src/components/RightContent/AvatarDropdown.tsx
+
+  ```tsx
+  import { outLogin } from '@/services/ant-design-pro/api';
+  import { LogoutOutlined, SettingOutlined, UserOutlined } from '@ant-design/icons';
+  import { history, useModel } from '@umijs/max';
+  import { Spin } from 'antd';
+  import { createStyles } from 'antd-style';
+  import { stringify } from 'querystring';
+  import type { MenuInfo } from 'rc-menu/lib/interface';
+  import React, { useCallback } from 'react';
+  import { flushSync } from 'react-dom';
+  import HeaderDropdown from '../HeaderDropdown';
+  
+  export type GlobalHeaderRightProps = {
+    menu?: boolean;
+    children?: React.ReactNode;
+  };
+  
+  export const AvatarName = () => {
+    const { initialState } = useModel('@@initialState');
+    const { currentUser } = initialState || {};
+    return <span className="anticon">{currentUser?.username}</span>;
+  };
+  
+  const useStyles = createStyles(({ token }) => {
+    return {
+      action: {
+        display: 'flex',
+        height: '48px',
+        marginLeft: 'auto',
+        overflow: 'hidden',
+        alignItems: 'center',
+        padding: '0 8px',
+        cursor: 'pointer',
+        borderRadius: token.borderRadius,
+        '&:hover': {
+          backgroundColor: token.colorBgTextHover,
+        },
+      },
+    };
+  });
+  
+  export const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu, children }) => {
+    /**
+     * 退出登录，并且将当前的 url 保存
+     */
+    const loginOut = async () => {
+      await outLogin();
+      const { search, pathname } = window.location;
+      const urlParams = new URL(window.location.href).searchParams;
+      /** 此方法会跳转到 redirect 参数所在的位置 */
+      const redirect = urlParams.get('redirect');
+      // Note: There may be security issues, please note
+      if (window.location.pathname !== '/user/login' && !redirect) {
+        history.replace({
+          pathname: '/user/login',
+          search: stringify({
+            redirect: pathname + search,
+          }),
+        });
+      }
+    };
+    const { styles } = useStyles();
+  
+    const { initialState, setInitialState } = useModel('@@initialState');
+  
+    const onMenuClick = useCallback(
+      (event: MenuInfo) => {
+        const { key } = event;
+        if (key === 'logout') {
+          flushSync(() => {
+            setInitialState((s) => ({ ...s, currentUser: undefined }));
+          });
+          loginOut();
+          return;
+        }
+        history.push(`/account/${key}`);
+      },
+      [setInitialState],
+    );
+  
+    const loading = (
+      <span className={styles.action}>
+        <Spin
+          size="small"
+          style={{
+            marginLeft: 8,
+            marginRight: 8,
+          }}
+        />
+      </span>
+    );
+  
+    if (!initialState) {
+      return loading;
+    }
+  
+    const { currentUser } = initialState;
+  
+    if (!currentUser || !currentUser.username) {
+      return loading;
+    }
+  
+    const menuItems = [
+      ...(menu
+        ? [
+            {
+              key: 'center',
+              icon: <UserOutlined />,
+              label: '个人中心',
+            },
+            {
+              key: 'settings',
+              icon: <SettingOutlined />,
+              label: '个人设置',
+            },
+            {
+              type: 'divider' as const,
+            },
+          ]
+        : []),
+      {
+        key: 'logout',
+        icon: <LogoutOutlined />,
+        label: '退出登录',
+      },
+    ];
+  
+    return (
+      <HeaderDropdown
+        menu={{
+          selectedKeys: [],
+          onClick: onMenuClick,
+          items: menuItems,
+        }}
+      >
+        {children}
+      </HeaderDropdown>
+    );
+  };
+  
+  ```
+
+  
+
+
+
+## 前后端联调：用户模块
+
+### 前端请求
+
+- 前端向后端发请求
+
+  `ajax`前端请求后端
+
+  `axios`封装了ajax
+
+  `request`是ant design项目的再一次封装
+
+  
+
+
+
+### 前后端交互：登陆注册
+
+- 任务
+
+  用户登陆 (用户态信息)
+
+  获取当前用户
+
+
+
+---
+
+- 登陆页面 src/pages/User/Login/index.tsx
+
+  onFinish
+
+  ```tsx
+          <LoginForm
+            onFinish={async (values) => {
+              await handleSubmit(values as API.LoginParams);
+            }}
+  
+  ```
+
+  handleSubmit
+
+  ```tsx
+    const handleSubmit = async (values: API.LoginParams) => {
+      try {
+        // 登录
+        const msg = await login({
+  ```
+
+  API.LoginParams (src/services/ant-design-pro/typings.d.ts)
+
+  ```typescript
+  declare namespace API {
+    // user/current
+    type CurrentUser = {
+      id: number,
+      username?: string,
+      userAccount?: string,
+      avatarUrl?: string,
+      gender?: number,
+      phone?: string,
+      email?: string,
+      userStatus?: number,
+      createTime?: Date,
+      userRole?: number,
+      planetCode?: string,
+    };
+  
+    // user/login
+    type LoginParams = {
+      userAccount?: string;
+      userPassword?: string;
+      autoLogin?: boolean;
+      type?: string;
+    };
+  
+    type LoginResult = {
+      status?: string;
+      type?: string;
+      currentAuthority?: string;
+    };
+  
+    // user/register
+    type RegisterParams = {
+      userAccount?: string;
+      userPassword?: string;
+      checkPassword?: string;
+      planetCode?: string;
+      type?: string;
+    };
+  
+    type RegisterResult = number;
+  ```
+
+- 发送请求
+
+  login (src/services/ant-design-pro/api.ts)
+
+  ```typescript
+  /** 登录接口 POST /api/user/login */
+  export async function login(body: API.LoginParams, options?: { [key: string]: any }) {
+    return request<API.LoginResult>('/api/user/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      data: body,
+      ...(options || {}),
+    });
+  }
+  
+  /** 注册接口 POST /api/user/register */
+  export async function register(body: API.RegisterParams, options?: { [key: string]: any }) {
+    return request<API.RegisterResult>('/api/user/register', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      data: body,
+      ...(options || {}),
+    });
+  }
+  
+  /** 获取当前的用户 GET /api/user/current */
+  export async function currentUser(options?: { [key: string]: any }) {
+    return request<API.CurrentUser>('/api/user/current', {
+      method: 'GET',
+      ...(options || {}),
+    });
+  }
+  
+  /** 退出登录接口 POST /api/user/logout */
+  export async function outLogin(options?: { [key: string]: any }) {
+    return request<Record<string, any>>('/api/user/logout', {
+      method: 'POST',
+      ...(options || {}),
+    });
+  }
+  
+  /** 搜索用户接口 GET /api/user/search */
+  export async function searchUsers(options?: { [key: string]: any }) {
+    return request<API.CurrentUser[]>('/api/user/search', {
+      method: 'GET',
+      ...(options || {}),
+    });
+  }
+  
+  ```
+
+  
+
+
+
+### 跨域问题 ✔✔✔
+
+- 代理
+
+  正向代理：替客户端 向服务器发送请求
+
+  反向代理：替服务器 接收请求
+
+- 代理实现
+
+  nginx服务器、nodejs服务器
+
+- 简单实现
+
+  config/proxy.ts
+
+  ```typescript
+  export default {
+    // 如果需要自定义本地开发服务器  请取消注释按需调整
+    dev: {
+      // localhost:8000/api/** -> https://preview.pro.ant.design/api/**
+      '/api/': {
+        // 要代理的地址  // http !!!
+        target: 'http://localhost:8080',
+        // 配置了这个可以从 http 代理到 https
+        // 依赖 origin 的功能可能需要这个，比如 cookie
+        changeOrigin: true,
+      },
+    },
+  ```
+
+  ![](res/UserCenter/FrontendProxy.png)
 
   
 
