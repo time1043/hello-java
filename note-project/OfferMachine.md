@@ -239,6 +239,7 @@
   -- create database if not exists offer_machine;
   -- use offer_machine;
   
+  
   -- 用户表
   create table if not exists user
   (
@@ -302,9 +303,9 @@
       UNIQUE (questionBankId, questionId)
   ) comment '题库题目' collate = utf8mb4_unicode_ci;
   ```
-
+  
   初始化数据
-
+  
   ```sql
   # 初始数据
   -- use mianshiya;
@@ -421,9 +422,9 @@
          (10, 12, 1),
          (10, 20, 1);
   ```
-
+  
   post_es_mapping.json
-
+  
   ```json
   {
     "aliases": {
@@ -477,7 +478,7 @@
     }
   }
   ```
-
+  
   
 
 
