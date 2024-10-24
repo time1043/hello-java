@@ -136,7 +136,7 @@
 
 - Architecture
 
-  ![mainshiya-bg-arch](res/OfferMachine/mainshiya-bg-arch.png)
+  ![](res/OfferMachine/mianshiya-bg-arch.png)
 
   
 
